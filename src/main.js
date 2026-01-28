@@ -6,6 +6,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import router from './router'
 import App from './App.vue'
 import './style.css'
+import './styles/index.scss'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -19,9 +20,23 @@ app.use(pinia)
 app.use(router)
 app.use(ElementPlus)
 
-// 初始化购物车数据
-import { useCartStore } from './stores/cart'
-const cartStore = useCartStore()
-cartStore.loadFromLocalStorage()
+// 初始化应用状态
+async function initializeApp() {
+  // 初始化购物车数据（从本地存储加载）
+  const { useCartStore } = await import('./stores/cart')
+  const cartStore = useCartStore()
+  cartStore.initialize()
+  
+  // 初始化商品数据
+  const { useProductStore } = await import('./stores/product')
+  const productStore = useProductStore()
+  await productStore.initialize()
+}
 
-app.mount('#app')
+// 启动应用
+initializeApp().then(() => {
+  app.mount('#app')
+}).catch(error => {
+  console.error('Failed to initialize app:', error)
+  app.mount('#app') // 即使初始化失败也要挂载应用
+})

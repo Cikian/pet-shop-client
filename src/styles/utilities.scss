@@ -1,0 +1,240 @@
+// 间距工具类
+@each $name, $value in (
+  'xs': $spacing-xs,
+  'sm': $spacing-sm,
+  'md': $spacing-md,
+  'lg': $spacing-lg,
+  'xl': $spacing-xl,
+  '2xl': $spacing-2xl
+) {
+  // Margin 工具类
+  .m-#{$name} { margin: $value !important; }
+  .mt-#{$name} { margin-top: $value !important; }
+  .mr-#{$name} { margin-right: $value !important; }
+  .mb-#{$name} { margin-bottom: $value !important; }
+  .ml-#{$name} { margin-left: $value !important; }
+  .mx-#{$name} { 
+    margin-left: $value !important; 
+    margin-right: $value !important; 
+  }
+  .my-#{$name} { 
+    margin-top: $value !important; 
+    margin-bottom: $value !important; 
+  }
+  
+  // Padding 工具类
+  .p-#{$name} { padding: $value !important; }
+  .pt-#{$name} { padding-top: $value !important; }
+  .pr-#{$name} { padding-right: $value !important; }
+  .pb-#{$name} { padding-bottom: $value !important; }
+  .pl-#{$name} { padding-left: $value !important; }
+  .px-#{$name} { 
+    padding-left: $value !important; 
+    padding-right: $value !important; 
+  }
+  .py-#{$name} { 
+    padding-top: $value !important; 
+    padding-bottom: $value !important; 
+  }
+}
+
+// 字体大小工具类
+@each $name, $value in (
+  'xs': $font-size-xs,
+  'sm': $font-size-sm,
+  'base': $font-size-base,
+  'lg': $font-size-lg,
+  'xl': $font-size-xl,
+  '2xl': $font-size-2xl,
+  '3xl': $font-size-3xl
+) {
+  .text-#{$name} { font-size: $value !important; }
+}
+
+// 文本颜色工具类
+.text-primary { color: $text-primary !important; }
+.text-secondary { color: $text-secondary !important; }
+.text-light { color: $text-light !important; }
+.text-white { color: white !important; }
+.text-success { color: $success-color !important; }
+.text-warning { color: $warning-color !important; }
+.text-error { color: $error-color !important; }
+.text-accent { color: $accent-color !important; }
+
+// 背景颜色工具类
+.bg-primary { background-color: $primary-color !important; }
+.bg-primary-light { background-color: $primary-light !important; }
+.bg-primary-dark { background-color: $primary-dark !important; }
+.bg-accent { background-color: $accent-color !important; }
+.bg-success { background-color: $success-color !important; }
+.bg-warning { background-color: $warning-color !important; }
+.bg-error { background-color: $error-color !important; }
+.bg-white { background-color: white !important; }
+.bg-light { background-color: $background !important; }
+.bg-card { background-color: $card-background !important; }
+
+// 渐变背景工具类
+.bg-gradient-primary {
+  @include gradient-bg(135deg, $primary-color, $primary-dark);
+}
+
+.bg-gradient-accent {
+  @include gradient-bg(135deg, $accent-color, $accent-dark);
+}
+
+.bg-gradient-success {
+  @include gradient-bg(135deg, $success-color, darken($success-color, 10%));
+}
+
+// 文本对齐工具类
+.text-left { text-align: left !important; }
+.text-center { text-align: center !important; }
+.text-right { text-align: right !important; }
+.text-justify { text-align: justify !important; }
+
+// 字体粗细工具类
+.font-light { font-weight: 300 !important; }
+.font-normal { font-weight: 400 !important; }
+.font-medium { font-weight: 500 !important; }
+.font-semibold { font-weight: 600 !important; }
+.font-bold { font-weight: 700 !important; }
+
+// 显示工具类
+.d-none { display: none !important; }
+.d-block { display: block !important; }
+.d-inline { display: inline !important; }
+.d-inline-block { display: inline-block !important; }
+.d-flex { display: flex !important; }
+.d-inline-flex { display: inline-flex !important; }
+.d-grid { display: grid !important; }
+
+// Flexbox 工具类
+.flex-row { flex-direction: row !important; }
+.flex-column { flex-direction: column !important; }
+.flex-wrap { flex-wrap: wrap !important; }
+.flex-nowrap { flex-wrap: nowrap !important; }
+
+.justify-start { justify-content: flex-start !important; }
+.justify-center { justify-content: center !important; }
+.justify-end { justify-content: flex-end !important; }
+.justify-between { justify-content: space-between !important; }
+.justify-around { justify-content: space-around !important; }
+.justify-evenly { justify-content: space-evenly !important; }
+
+.align-start { align-items: flex-start !important; }
+.align-center { align-items: center !important; }
+.align-end { align-items: flex-end !important; }
+.align-stretch { align-items: stretch !important; }
+.align-baseline { align-items: baseline !important; }
+
+.flex-1 { flex: 1 !important; }
+.flex-auto { flex: auto !important; }
+.flex-none { flex: none !important; }
+
+// 位置工具类
+.position-static { position: static !important; }
+.position-relative { position: relative !important; }
+.position-absolute { position: absolute !important; }
+.position-fixed { position: fixed !important; }
+.position-sticky { position: sticky !important; }
+
+// 边框工具类
+.border { border: 1px solid $border-color !important; }
+.border-top { border-top: 1px solid $border-color !important; }
+.border-right { border-right: 1px solid $border-color !important; }
+.border-bottom { border-bottom: 1px solid $border-color !important; }
+.border-left { border-left: 1px solid $border-color !important; }
+.border-none { border: none !important; }
+
+// 圆角工具类
+.rounded-none { border-radius: 0 !important; }
+.rounded-sm { border-radius: 4px !important; }
+.rounded { border-radius: 8px !important; }
+.rounded-lg { border-radius: 12px !important; }
+.rounded-xl { border-radius: 16px !important; }
+.rounded-full { border-radius: 50% !important; }
+
+// 阴影工具类
+.shadow-none { box-shadow: none !important; }
+.shadow-sm { @include card-shadow(1); }
+.shadow { @include card-shadow(2); }
+.shadow-lg { @include card-shadow(3); }
+
+// 溢出工具类
+.overflow-hidden { overflow: hidden !important; }
+.overflow-auto { overflow: auto !important; }
+.overflow-scroll { overflow: scroll !important; }
+.overflow-visible { overflow: visible !important; }
+
+// 文本截断工具类
+.text-ellipsis { @include text-ellipsis(1); }
+.text-ellipsis-2 { @include text-ellipsis(2); }
+.text-ellipsis-3 { @include text-ellipsis(3); }
+
+// 宽度工具类
+.w-auto { width: auto !important; }
+.w-full { width: 100% !important; }
+.w-screen { width: 100vw !important; }
+
+@for $i from 1 through 12 {
+  .w-#{$i} { width: percentage($i / 12) !important; }
+}
+
+// 高度工具类
+.h-auto { height: auto !important; }
+.h-full { height: 100% !important; }
+.h-screen { height: 100vh !important; }
+
+// 最大宽度工具类
+.max-w-xs { max-width: 320px !important; }
+.max-w-sm { max-width: 384px !important; }
+.max-w-md { max-width: 448px !important; }
+.max-w-lg { max-width: 512px !important; }
+.max-w-xl { max-width: 576px !important; }
+.max-w-2xl { max-width: 672px !important; }
+.max-w-full { max-width: 100% !important; }
+
+// 响应式显示工具类
+@include max-width($breakpoint-sm) {
+  .d-sm-none { display: none !important; }
+  .d-sm-block { display: block !important; }
+  .d-sm-flex { display: flex !important; }
+}
+
+@include max-width($breakpoint-md) {
+  .d-md-none { display: none !important; }
+  .d-md-block { display: block !important; }
+  .d-md-flex { display: flex !important; }
+}
+
+@include max-width($breakpoint-lg) {
+  .d-lg-none { display: none !important; }
+  .d-lg-block { display: block !important; }
+  .d-lg-flex { display: flex !important; }
+}
+
+// 动画工具类
+.fade-in { @include fade-in(); }
+.slide-up { @include slide-up(); }
+
+.transition-all { transition: all 0.3s ease !important; }
+.transition-colors { transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease !important; }
+.transition-transform { transition: transform 0.3s ease !important; }
+
+// 交互状态工具类
+.hover-lift {
+  @include hover-lift();
+}
+
+.cursor-pointer { cursor: pointer !important; }
+.cursor-default { cursor: default !important; }
+.cursor-not-allowed { cursor: not-allowed !important; }
+
+// 选择状态工具类
+.select-none { user-select: none !important; }
+.select-text { user-select: text !important; }
+.select-all { user-select: all !important; }
+
+// 指针事件工具类
+.pointer-events-none { pointer-events: none !important; }
+.pointer-events-auto { pointer-events: auto !important; }
