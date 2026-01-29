@@ -83,7 +83,7 @@ router.beforeEach((to, from, next) => {
   next()
 })
 
-// 全局后置钩子 - 移除加载状态
+// 全局后置钩子 - 移除加载状态和记录导航历史
 router.afterEach((to, from) => {
   // 移除页面加载状态
   if (typeof window !== 'undefined') {
@@ -91,6 +91,32 @@ router.afterEach((to, from) => {
       document.body.classList.remove('page-loading')
     }, 100)
   }
+  
+  // 记录导航历史（延迟导入避免循环依赖）
+  import('@/stores/navigation.js').then(({ useNavigationStore }) => {
+    const navigationStore = useNavigationStore()
+    navigationStore.addToHistory(to)
+    navigationStore.saveToLocalStorage()
+    
+    // 记录购物流程
+    const shoppingActions = {
+      'Home': 'visit_home',
+      'Category': 'browse_category',
+      'Product': 'view_product',
+      'Search': 'search_products',
+      'Cart': 'view_cart'
+    }
+    
+    const action = shoppingActions[to.name]
+    if (action) {
+      navigationStore.trackShoppingFlow(action, {
+        route: to.name,
+        params: to.params,
+        query: to.query,
+        from: from.name
+      })
+    }
+  })
 })
 
 // 路由错误处理

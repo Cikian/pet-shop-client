@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useCartStore } from '../src/stores/cart'
 import { useProductStore } from '../src/stores/product'
@@ -12,6 +12,17 @@ const localStorageMock = {
   clear: vi.fn(),
 }
 vi.stubGlobal('localStorage', localStorageMock)
+
+// Mock Math.random to prevent flaky tests due to random network errors
+const originalMathRandom = Math.random
+beforeEach(() => {
+  // Always return 0.1 to avoid the 5% network error simulation
+  Math.random = vi.fn(() => 0.1)
+})
+
+afterEach(() => {
+  Math.random = originalMathRandom
+})
 
 describe('Cart Store', () => {
   beforeEach(() => {

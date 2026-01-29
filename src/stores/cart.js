@@ -12,7 +12,11 @@ export const useCartStore = defineStore('cart', {
     /** @type {CartItem[]} */
     items: [],
     /** @type {boolean} */
-    isVisible: false
+    isVisible: false,
+    /** @type {boolean} */
+    loading: false,
+    /** @type {Object|null} */
+    error: null
   }),
   
   getters: {
@@ -209,6 +213,13 @@ export const useCartStore = defineStore('cart', {
         localStorage.setItem('mall-cart', JSON.stringify(this.items))
       } catch (error) {
         console.error('Failed to save cart to localStorage:', error)
+        this.error = {
+          message: '购物车数据保存失败',
+          type: 'storage',
+          timestamp: new Date().toISOString(),
+          retryable: true
+        }
+        throw error
       }
     },
     
@@ -233,9 +244,16 @@ export const useCartStore = defineStore('cart', {
             }))
           }
         }
+        this.error = null // 清除之前的错误
       } catch (error) {
         console.error('Failed to load cart from localStorage:', error)
         this.items = []
+        this.error = {
+          message: '购物车数据加载失败',
+          type: 'storage',
+          timestamp: new Date().toISOString(),
+          retryable: true
+        }
       }
     },
     

@@ -29,7 +29,21 @@
               </el-button>
             </div>
             <div class="banner-image">
-              <img :src="banner.image" :alt="banner.title" />
+              <LazyImage
+                :src="banner.image"
+                :alt="banner.title"
+                :fallback="defaultBannerImage"
+                :width="'100%'"
+                :height="'100%'"
+                :lazy="index === 0 ? false : true"
+                :threshold="100"
+                :show-placeholder-icon="true"
+                :show-retry="true"
+                :object-fit="'cover'"
+                :border-radius="8"
+                @load="handleImageLoad"
+                @error="handleImageError"
+              />
             </div>
           </div>
         </div>
@@ -68,9 +82,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
+import LazyImage from '@/components/common/LazyImage.vue'
 
 /**
  * 组件属性
@@ -109,6 +124,11 @@ const autoplayTimer = ref(null)
 const touchStartX = ref(0)
 const touchEndX = ref(0)
 const isDragging = ref(false)
+
+// 计算属性
+const defaultBannerImage = computed(() => {
+  return 'https://via.placeholder.com/400x250/667eea/ffffff?text=轮播图'
+})
 
 /**
  * 下一张轮播图
@@ -172,6 +192,20 @@ const handleBannerClick = (banner) => {
       router.push(banner.link)
     }
   }
+}
+
+/**
+ * 处理图片加载成功
+ */
+const handleImageLoad = (event) => {
+  console.log('Banner image loaded:', event.src)
+}
+
+/**
+ * 处理图片加载失败
+ */
+const handleImageError = (event) => {
+  console.error('Banner image failed to load:', event.src)
 }
 
 /**
@@ -364,13 +398,6 @@ const handleMouseLeave = () => {
   @media (max-width: $breakpoint-md) {
     max-width: 250px;
     height: 150px;
-  }
-  
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 8px;
   }
 }
 

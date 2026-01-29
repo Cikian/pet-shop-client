@@ -1,13 +1,65 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>vue-client</title>
+    
+    <!-- PWA 配置 -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#667eea" />
+    <meta name="background-color" content="#f8f9fa" />
+    
+    <!-- iOS PWA 支持 -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="在线商城" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    
+    <!-- Windows PWA 支持 -->
+    <meta name="msapplication-TileColor" content="#667eea" />
+    <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
+    
+    <!-- SEO 优化 -->
+    <meta name="description" content="现代化的在线购物平台，提供优质的购物体验，支持离线浏览" />
+    <meta name="keywords" content="在线商城,购物,电商,Vue3,PWA" />
+    <meta name="author" content="在线商城团队" />
+    
+    <!-- 性能优化 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
+    
+    <!-- 预加载关键资源 -->
+    <link rel="preload" href="/src/main.js" as="script" />
+    <link rel="preload" href="/src/style.css" as="style" />
+    
+    <title>在线商城 - 现代化购物体验</title>
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
+    
+    <!-- 离线提示脚本 -->
+    <script>
+      // 检查浏览器支持
+      if (!('serviceWorker' in navigator)) {
+        console.warn('当前浏览器不支持 Service Worker，离线功能将不可用')
+      }
+      
+      // 监听应用安装提示
+      let deferredPrompt
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault()
+        deferredPrompt = e
+        console.log('PWA 安装提示已准备就绪')
+      })
+      
+      // 监听应用安装完成
+      window.addEventListener('appinstalled', () => {
+        console.log('PWA 安装完成')
+        deferredPrompt = null
+      })
+    </script>
   </body>
 </html>

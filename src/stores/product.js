@@ -238,12 +238,24 @@ export const useProductStore = defineStore('product', {
       try {
         // 模拟API调用延迟
         await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // 模拟网络错误（5%概率）
+        if (Math.random() < 0.05) {
+          throw new Error('Network error: Failed to fetch products')
+        }
+        
         this.products = [...mockProducts]
         // 更新分类商品数量
         this.updateCategoryProductCounts()
       } catch (error) {
-        this.error = 'Failed to fetch products'
+        this.error = {
+          message: error.message || 'Failed to fetch products',
+          type: 'network',
+          timestamp: new Date().toISOString(),
+          retryable: true
+        }
         console.error('Failed to fetch products:', error)
+        throw error // 重新抛出错误以便组件处理
       } finally {
         this.loading = false
       }
@@ -259,10 +271,22 @@ export const useProductStore = defineStore('product', {
       try {
         // 模拟API调用延迟
         await new Promise(resolve => setTimeout(resolve, 300))
+        
+        // 模拟网络错误（3%概率）
+        if (Math.random() < 0.03) {
+          throw new Error('Network error: Failed to fetch categories')
+        }
+        
         this.categories = updateCategoryProductCounts()
       } catch (error) {
-        this.error = 'Failed to fetch categories'
+        this.error = {
+          message: error.message || 'Failed to fetch categories',
+          type: 'network',
+          timestamp: new Date().toISOString(),
+          retryable: true
+        }
         console.error('Failed to fetch categories:', error)
+        throw error // 重新抛出错误以便组件处理
       } finally {
         this.loading = false
       }

@@ -35,11 +35,15 @@
       <div class="header-actions">
         <!-- 购物车图标 -->
         <div class="cart-wrapper">
-          <router-link to="/cart" class="cart-link">
+          <div class="cart-trigger" @click="toggleCart">
             <el-badge :value="cartCount" :hidden="cartCount === 0" class="cart-badge">
               <el-icon class="cart-icon"><ShoppingCart /></el-icon>
             </el-badge>
             <span class="cart-text">购物车</span>
+          </div>
+          <!-- 购物车页面链接（移动端） -->
+          <router-link to="/cart" class="cart-page-link">
+            <el-icon><ArrowRight /></el-icon>
           </router-link>
         </div>
 
@@ -67,6 +71,12 @@
         <router-link to="/cart" @click="closeMobileMenu">购物车</router-link>
       </div>
     </div>
+
+    <!-- 购物车抽屉 -->
+    <CartDrawer 
+      v-model="showCartDrawer" 
+      @checkout="handleCheckout"
+    />
   </header>
 </template>
 
@@ -74,7 +84,9 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
-import { Search, ShoppingCart, Shop, Menu } from '@element-plus/icons-vue'
+import { Search, ShoppingCart, Shop, Menu, ArrowRight } from '@element-plus/icons-vue'
+import { CartDrawer } from '@/components/cart'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const cartStore = useCartStore()
@@ -82,6 +94,7 @@ const cartStore = useCartStore()
 // 响应式数据
 const searchKeyword = ref('')
 const showMobileMenu = ref(false)
+const showCartDrawer = ref(false)
 
 // 计算属性
 const cartCount = computed(() => cartStore.totalCount)
@@ -102,6 +115,17 @@ const toggleMobileMenu = () => {
 
 const closeMobileMenu = () => {
   showMobileMenu.value = false
+}
+
+const toggleCart = () => {
+  showCartDrawer.value = !showCartDrawer.value
+  cartStore.toggleCartVisibility()
+}
+
+const handleCheckout = (checkoutData) => {
+  // 处理结算逻辑
+  console.log('结算数据:', checkoutData)
+  ElMessage.success('跳转到结算页面...')
 }
 </script>
 
@@ -195,19 +219,34 @@ const closeMobileMenu = () => {
     flex-shrink: 0;
 
     .cart-wrapper {
-      .cart-link {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .cart-trigger {
         display: flex;
         align-items: center;
         gap: 0.5rem;
         color: var(--text-primary);
-        text-decoration: none;
         padding: 0.5rem;
         border-radius: 8px;
         transition: all 0.3s ease;
+        cursor: pointer;
+        min-height: 44px; // 增大触摸区域
+        min-width: 44px;
 
         &:hover {
           background: var(--background);
           color: var(--primary-color);
+        }
+        
+        // 移动端触摸反馈
+        @media (max-width: 768px) {
+          &:active {
+            transform: scale(0.95);
+            background: var(--background);
+          }
         }
 
         .cart-icon {
@@ -220,6 +259,31 @@ const closeMobileMenu = () => {
           @media (max-width: 768px) {
             display: none;
           }
+        }
+      }
+
+      .cart-page-link {
+        display: none;
+        color: var(--text-secondary);
+        padding: 8px;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+        min-height: 44px;
+        min-width: 44px;
+        align-items: center;
+        justify-content: center;
+
+        &:hover {
+          color: var(--primary-color);
+          background: var(--background);
+        }
+        
+        &:active {
+          transform: scale(0.95);
+        }
+
+        @media (max-width: 768px) {
+          display: flex;
         }
       }
 
@@ -241,6 +305,12 @@ const closeMobileMenu = () => {
       .mobile-menu-button {
         font-size: 1.5rem;
         color: var(--text-primary);
+        min-height: 44px;
+        min-width: 44px;
+        
+        &:active {
+          transform: scale(0.95);
+        }
       }
     }
   }
@@ -250,27 +320,57 @@ const closeMobileMenu = () => {
     background: var(--card-background);
     border-top: 1px solid var(--border-color);
     padding: 1rem 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 
     @media (max-width: 768px) {
       display: block;
     }
 
     .mobile-nav-item {
-      padding: 0.75rem 1rem;
+      padding: 0;
 
       a {
         color: var(--text-primary);
         text-decoration: none;
         font-weight: 500;
         display: block;
-        padding: 0.5rem 0;
+        padding: 1rem 1.5rem;
         border-bottom: 1px solid transparent;
         transition: all 0.3s ease;
+        position: relative;
+        min-height: 44px; // 增大触摸区域
+        display: flex;
+        align-items: center;
 
         &:hover,
         &.router-link-active {
           color: var(--primary-color);
-          border-bottom-color: var(--primary-color);
+          background: rgba(var(--primary-color-rgb), 0.05);
+          border-left: 3px solid var(--primary-color);
+        }
+        
+        &:active {
+          background: rgba(var(--primary-color-rgb), 0.1);
+          transform: scale(0.98);
+        }
+        
+        // 添加触摸反馈动画
+        &::after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          background: rgba(var(--primary-color-rgb), 0.2);
+          border-radius: 50%;
+          transform: translate(-50%, -50%);
+          transition: width 0.3s ease, height 0.3s ease;
+        }
+        
+        &:active::after {
+          width: 100%;
+          height: 100%;
         }
       }
     }

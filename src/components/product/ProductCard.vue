@@ -2,12 +2,21 @@
   <div class="product-card" @click="handleCardClick">
     <!-- 商品图片区域 -->
     <div class="product-image-container">
-      <img 
-        :src="product.image" 
+      <LazyImage
+        :src="product.image"
         :alt="product.name"
+        :fallback="defaultImage"
+        :width="'100%'"
+        :height="'100%'"
+        :lazy="true"
+        :threshold="50"
+        :show-placeholder-icon="true"
+        :show-retry="true"
+        :object-fit="'cover'"
+        :border-radius="0"
         class="product-image"
+        @load="handleImageLoad"
         @error="handleImageError"
-        loading="lazy"
       />
       
       <!-- 折扣标签 -->
@@ -104,6 +113,7 @@ import {
   StarFilled, 
   ShoppingCartFull 
 } from '@element-plus/icons-vue'
+import LazyImage from '@/components/common/LazyImage.vue'
 
 /**
  * 商品卡片组件
@@ -153,6 +163,10 @@ const displayTags = computed(() => {
   return props.product.tags.slice(0, props.maxTags)
 })
 
+const defaultImage = computed(() => {
+  return 'https://via.placeholder.com/300x300/f5f5f5/cccccc?text=暂无图片'
+})
+
 // 方法
 const formatPrice = (price) => {
   return price.toLocaleString('zh-CN')
@@ -191,9 +205,13 @@ const addToCart = () => {
   })
 }
 
+const handleImageLoad = (event) => {
+  console.log('Product image loaded:', event.src)
+}
+
 const handleImageError = (event) => {
-  // 图片加载失败时显示默认图片
-  event.target.src = 'https://via.placeholder.com/300x300?text=暂无图片'
+  console.error('Product image failed to load:', event.src)
+  ElMessage.warning('商品图片加载失败')
 }
 </script>
 
@@ -212,7 +230,7 @@ const handleImageError = (event) => {
   transition: all 0.3s ease;
   
   &:hover {
-    .product-image {
+    .product-image :deep(.lazy-img) {
       transform: scale(1.05);
     }
     
@@ -233,13 +251,11 @@ const handleImageError = (event) => {
   @include min-width($breakpoint-md) {
     height: 240px;
   }
-}
-
-.product-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
+  
+  .product-image {
+    width: 100%;
+    height: 100%;
+  }
 }
 
 .discount-badge {
@@ -387,24 +403,100 @@ const handleImageError = (event) => {
 // 响应式适配
 @include max-width($breakpoint-sm) {
   .product-card {
+    // 移动端触摸优化
+    &:active {
+      transform: scale(0.98);
+    }
+    
+    .product-image-container {
+      height: 160px;
+    }
+    
     .product-info {
       padding: $spacing-sm;
+      gap: $spacing-xs;
     }
     
     .product-name {
       font-size: $font-size-sm;
+      min-height: 2.4em;
     }
     
     .product-price .current-price {
       font-size: $font-size-base;
     }
     
+    .product-rating {
+      :deep(.el-rate) {
+        --el-rate-icon-size: 12px;
+      }
+      
+      .review-count {
+        font-size: $font-size-xs;
+      }
+    }
+    
     .product-actions {
       padding: 0 $spacing-sm $spacing-sm;
       
       .add-to-cart-btn {
+        height: 36px;
         font-size: $font-size-sm;
-        padding: $spacing-xs $spacing-sm;
+        padding: 0 $spacing-sm;
+        
+        // 增大触摸区域
+        position: relative;
+        
+        &::before {
+          content: '';
+          position: absolute;
+          top: -8px;
+          left: -8px;
+          right: -8px;
+          bottom: -8px;
+          background: transparent;
+        }
+      }
+    }
+    
+    .favorite-btn {
+      width: 32px;
+      height: 32px;
+      
+      // 增大触摸区域
+      &::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: -8px;
+        right: -8px;
+        bottom: -8px;
+        background: transparent;
+      }
+      
+      .el-icon {
+        font-size: 16px;
+      }
+    }
+  }
+}
+
+// 超小屏幕优化
+@include max-width(480px) {
+  .product-card {
+    .product-image-container {
+      height: 140px;
+    }
+    
+    .product-name {
+      @include text-ellipsis(2);
+      min-height: 2.2em;
+    }
+    
+    .product-tags {
+      .el-tag {
+        font-size: 10px;
+        padding: 2px 6px;
       }
     }
   }

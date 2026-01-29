@@ -214,6 +214,19 @@
   }
 }
 
+@mixin slide-down($duration: 0.3s, $distance: -20px) {
+  opacity: 0;
+  transform: translateY($distance);
+  animation: slideDown $duration ease-out forwards;
+}
+
+@keyframes slideDown {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 // 加载动画 Mixin
 @mixin loading-spinner($size: 20px, $color: $primary-color) {
   width: $size;
