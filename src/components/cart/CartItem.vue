@@ -155,6 +155,8 @@ const toggleFavorite = () => {
 </script>
 
 <style lang="scss" scoped>
+@use '@/styles/variables' as *;
+
 .cart-item {
   display: flex;
   align-items: center;

@@ -1,3 +1,6 @@
+// 导入变量
+@use './variables' as *;
+
 // 响应式断点 Mixins
 @mixin respond-to($breakpoint) {
   @if $breakpoint == xs {

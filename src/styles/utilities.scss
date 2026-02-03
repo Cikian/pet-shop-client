@@ -1,3 +1,11 @@
+// 导入 Sass 内置模块
+@use 'sass:color';
+@use 'sass:math';
+
+// 导入变量和mixins
+@use './variables' as *;
+@use './mixins' as *;
+
 // 间距工具类
 @each $name, $value in (
   'xs': $spacing-xs,
@@ -83,7 +91,7 @@
 }
 
 .bg-gradient-success {
-  @include gradient-bg(135deg, $success-color, darken($success-color, 10%));
+  @include gradient-bg(135deg, $success-color, color.adjust($success-color, $lightness: -10%));
 }
 
 // 文本对齐工具类
@@ -177,7 +185,7 @@
 .w-screen { width: 100vw !important; }
 
 @for $i from 1 through 12 {
-  .w-#{$i} { width: percentage($i / 12) !important; }
+  .w-#{$i} { width: math.percentage(math.div($i, 12)) !important; }
 }
 
 // 高度工具类

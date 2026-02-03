@@ -153,7 +153,7 @@ const getLineWidth = (index) => {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
+@use '@/styles/variables' as *;
 
 .loading-skeleton {
   .skeleton-base {

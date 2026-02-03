@@ -114,7 +114,7 @@ const gridStyle = computed(() => ({
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
+@use '@/styles/variables' as *;
 
 .category-grid {
   width: 100%;

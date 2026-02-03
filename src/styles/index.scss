@@ -1,14 +1,17 @@
 // 在线商城设计系统主文件
 // 导入顺序很重要：变量 -> mixins -> 工具类
 
-// 1. 变量定义（已通过 Vite 配置自动导入）
-// @import './variables.scss';
+// 导入 Sass 内置模块
+@use 'sass:color';
+
+// 1. 变量定义
+@use './variables' as *;
 
 // 2. Mixins 和函数
-@import './mixins.scss';
+@use './mixins' as *;
 
 // 3. 工具类
-@import './utilities.scss';
+@use './utilities';
 
 // 4. 组件特定样式（可选，用于全局组件样式）
 // 这里可以添加全局组件样式，比如：
@@ -33,8 +36,8 @@
     border-color: $success-color;
     
     &:hover {
-      background-color: darken($success-color, 10%);
-      border-color: darken($success-color, 10%);
+      background-color: color.adjust($success-color, $lightness: -10%);
+      border-color: color.adjust($success-color, $lightness: -10%);
     }
   }
   
@@ -44,8 +47,8 @@
     color: $text-primary;
     
     &:hover {
-      background-color: darken($warning-color, 10%);
-      border-color: darken($warning-color, 10%);
+      background-color: color.adjust($warning-color, $lightness: -10%);
+      border-color: color.adjust($warning-color, $lightness: -10%);
     }
   }
   
@@ -54,8 +57,8 @@
     border-color: $error-color;
     
     &:hover {
-      background-color: darken($error-color, 10%);
-      border-color: darken($error-color, 10%);
+      background-color: color.adjust($error-color, $lightness: -10%);
+      border-color: color.adjust($error-color, $lightness: -10%);
     }
   }
 }
@@ -109,7 +112,7 @@
   &.el-tag--warning {
     background-color: rgba($warning-color, 0.1);
     border-color: rgba($warning-color, 0.2);
-    color: darken($warning-color, 20%);
+    color: color.adjust($warning-color, $lightness: -20%);
   }
   
   &.el-tag--danger {
