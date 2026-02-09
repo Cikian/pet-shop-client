@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
@@ -16,6 +17,7 @@ import { registerServiceWorker } from './utils/serviceWorker'
 
 const app = createApp(App)
 const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)
 
 // 注册Element Plus图标
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {

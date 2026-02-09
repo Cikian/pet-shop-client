@@ -19,23 +19,34 @@
 ### 项目结构
 ```
 src/
+├── api/                # API接口封装
+│   ├── http.js         # axios封装和拦截器
+│   ├── auth.js         # 认证相关API
+│   └── home.js         # 首页相关API
 ├── components/          # 公共组件
 │   ├── common/         # 通用组件
 │   ├── layout/         # 布局组件
-│   └── product/        # 商品相关组件
+│   ├── product/        # 商品相关组件
+│   └── auth/           # 认证相关组件
 ├── views/              # 页面组件
 │   ├── Home.vue        # 首页
 │   ├── Category.vue    # 分类页
 │   ├── Product.vue     # 商品详情页
-│   └── Cart.vue        # 购物车页
+│   ├── Cart.vue        # 购物车页
+│   ├── Login.vue       # 登录页
+│   └── Register.vue    # 注册页
 ├── stores/             # Pinia状态管理
 │   ├── cart.js         # 购物车状态
 │   ├── product.js      # 商品状态
-│   └── user.js         # 用户状态
+│   ├── user.js         # 用户状态
+│   └── auth.js         # 认证状态
 ├── router/             # 路由配置
+│   └── guards.js       # 路由守卫
 ├── assets/             # 静态资源
 ├── styles/             # 样式文件
 └── utils/              # 工具函数
+    ├── storage.js      # 本地存储工具
+    └── validator.js    # 表单验证工具
 ```
 
 ## 组件和接口
@@ -78,6 +89,26 @@ src/
 - **CartItem**: 购物车商品项
 - **CartSummary**: 购物车汇总
 - **CartActions**: 购物车操作按钮
+
+#### 5. 认证组件 (Auth)
+- **LoginForm**: 登录表单
+  - 用户名/邮箱输入框（单一输入框）
+  - 密码输入框
+  - 登录按钮
+  - Google登录按钮（预留）
+  - 注册链接
+- **RegisterForm**: 注册表单
+  - 用户名输入框
+  - 邮箱输入框
+  - 邮箱验证码输入框（带发送按钮和倒计时）
+  - 密码输入框
+  - 确认密码输入框
+  - 手机号输入框（可选）
+  - 昵称输入框（可选）
+  - 头像上传组件（可选）
+  - 注册按钮
+  - Google注册按钮（预留）
+  - 登录链接
 
 ### 接口设计
 
@@ -122,6 +153,92 @@ interface Category {
   icon: string
   image: string
   productCount: number
+}
+```
+
+#### 用户认证接口
+```typescript
+interface LoginRequest {
+  username: string  // 可以是用户名或邮箱
+  password: string
+}
+
+interface RegisterRequest {
+  userName: string
+  email: string
+  captcha: string
+  password: string
+  phone?: string
+  nickname?: string
+  avatar?: string
+}
+
+interface User {
+  id: string
+  username: string
+  nickname: string
+  avatar: string
+  birthday: string
+  sex: number
+  email: string
+  phone: string
+  userSource: string
+  status: number
+  lastLoginTime: string
+  lastLoginIp: string
+  createTime: string
+}
+
+interface AuthResponse {
+  accessToken: string
+  refreshToken: string | null
+  tokenType: string
+  expiresIn: number | null
+  user: User
+  authorities: string[]
+}
+
+interface ApiResponse<T> {
+  success: boolean
+  message: string
+  code: number
+  result: T
+  timestamp: number
+}
+```
+
+#### 轮播图数据接口
+```typescript
+interface SlideItem {
+  id: string
+  productId: string
+  sortOrder: number
+  name: string
+  description: string
+  displayImg: string | null
+  mainImg: string
+  categoryId: string
+  status: boolean
+  delFlag: boolean
+}
+```
+
+#### HTTP请求封装接口
+```typescript
+interface HttpConfig {
+  baseURL: string
+  timeout: number
+  headers: Record<string, string>
+}
+
+interface RequestInterceptor {
+  onFulfilled: (config: any) => any
+  onRejected: (error: any) => any
+}
+
+interface ResponseInterceptor {
+  onFulfilled: (response: any) => any
+  onRejected: (error: any) => any
 }
 ```
 
@@ -176,10 +293,144 @@ export const useProductStore = defineStore('product', {
 })
 ```
 
+#### 3. 认证状态 (authStore)
+```javascript
+// stores/auth.js
+export const useAuthStore = defineStore('auth', {
+  state: () => ({
+    accessToken: null,
+    user: null,
+    authorities: [],
+    isAuthenticated: false
+  }),
+  
+  getters: {
+    isLoggedIn: (state) => state.isAuthenticated && !!state.accessToken,
+    userInfo: (state) => state.user,
+    hasAuthority: (state) => (authority) => state.authorities.includes(authority)
+  },
+  
+  actions: {
+    async login(username, password),
+    async register(registerData),
+    async sendEmailCaptcha(email),
+    logout(),
+    updateToken(newToken),
+    restoreAuth(),  // 从localStorage恢复认证状态
+    clearAuth()     // 清除认证状态
+  },
+  
+  persist: {
+    enabled: true,
+    strategies: [
+      {
+        key: 'auth',
+        storage: localStorage,
+        paths: ['accessToken', 'user', 'authorities', 'isAuthenticated']
+      }
+    ]
+  }
+})
+```
+
+### HTTP请求封装设计
+
+#### axios实例配置
+```javascript
+// api/http.js
+import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
+
+const http = axios.create({
+  baseURL: '/api',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+
+// 请求拦截器
+http.interceptors.request.use(
+  config => {
+    const authStore = useAuthStore()
+    if (authStore.accessToken) {
+      config.headers.Authorization = `Bearer ${authStore.accessToken}`
+    }
+    return config
+  },
+  error => Promise.reject(error)
+)
+
+// 响应拦截器
+http.interceptors.response.use(
+  response => {
+    // 检查是否有新token
+    const newToken = response.headers['new-token']
+    if (newToken) {
+      const authStore = useAuthStore()
+      authStore.updateToken(newToken)
+    }
+    
+    // 提取result字段
+    if (response.data && response.data.result !== undefined) {
+      return response.data.result
+    }
+    return response.data
+  },
+  error => {
+    // 401未授权处理
+    if (error.response && error.response.status === 401) {
+      const authStore = useAuthStore()
+      authStore.clearAuth()
+      router.push('/login')
+    }
+    return Promise.reject(error)
+  }
+)
+
+// 封装方法
+export const getAction = (url, params) => http.get(url, { params })
+export const postAction = (url, data) => http.post(url, data)
+export const putAction = (url, data) => http.put(url, data)
+export const deleteAction = (url, params) => http.delete(url, { params })
+
+export default http
+```
+
+#### API接口封装
+```javascript
+// api/auth.js
+import { postAction } from './http'
+
+export const loginApi = (username, password) => {
+  return postAction('/v1/auth/login', { username, password })
+}
+
+export const getVerificationCode = (email) => {
+  return getAction('/v1/email/getVerificationCode', { email })
+}
+
+export const registerApi = (registerData) => {
+  return postAction('/v1/auth/register', registerData)
+}
+
+export const sendCaptchaApi = (email) => {
+  return postAction('/v1/auth/captcha', { email })
+}
+
+// api/home.js
+import { getAction } from './http'
+
+export const getSlideListApi = () => {
+  return getAction('/home/slide')
+}
+```
+
 ### 本地存储设计
 - 购物车数据持久化到 localStorage
 - 用户偏好设置存储
 - 浏览历史记录
+- 认证信息持久化（accessToken、user、authorities）
 
 ## 设计系统
 
@@ -267,34 +518,90 @@ const routes = [
     path: '/',
     name: 'Home',
     component: () => import('@/views/Home.vue'),
-    meta: { title: '首页' }
+    meta: { title: '首页', requiresAuth: false }
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/Login.vue'),
+    meta: { title: '登录', requiresAuth: false }
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('@/views/Register.vue'),
+    meta: { title: '注册', requiresAuth: false }
   },
   {
     path: '/category/:id?',
     name: 'Category',
     component: () => import('@/views/Category.vue'),
-    meta: { title: '商品分类' }
+    meta: { title: '商品分类', requiresAuth: false }
   },
   {
     path: '/product/:id',
     name: 'Product',
     component: () => import('@/views/Product.vue'),
-    meta: { title: '商品详情' }
+    meta: { title: '商品详情', requiresAuth: false }
   },
   {
     path: '/cart',
     name: 'Cart',
     component: () => import('@/views/Cart.vue'),
-    meta: { title: '购物车' }
+    meta: { title: '购物车', requiresAuth: false }
   },
   {
     path: '/search',
     name: 'Search',
     component: () => import('@/views/Search.vue'),
-    meta: { title: '搜索结果' }
+    meta: { title: '搜索结果', requiresAuth: false }
   }
 ]
+
+// 路由守卫
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+  
+  // 设置页面标题
+  document.title = to.meta.title || '在线商城'
+  
+  // 检查是否需要认证
+  if (to.meta.requiresAuth && !authStore.isLoggedIn) {
+    next({ name: 'Login', query: { redirect: to.fullPath } })
+  } else {
+    next()
+  }
+})
 ```
+
+### 轮播图设计规范
+
+#### 视觉设计
+- **图片比例**: 16:9 或 21:9（宽屏）
+- **圆角**: 12px
+- **阴影**: 0 4px 12px rgba(0, 0, 0, 0.1)
+- **间距**: 轮播图与其他内容间距24px
+- **高度**: 
+  - 桌面端: 400-500px
+  - 平板端: 300-400px
+  - 移动端: 200-300px
+
+#### 交互设计
+- **自动播放**: 5秒间隔
+- **过渡动画**: 淡入淡出，持续时间0.5秒
+- **指示器**: 底部居中，圆点样式
+- **导航按钮**: 左右箭头，悬停时显示
+- **触摸支持**: 移动端支持左右滑动
+
+#### 加载状态
+- **骨架屏**: 显示轮播图占位符
+- **加载动画**: 渐变闪烁效果
+- **错误处理**: 显示默认占位图
+
+#### 数据处理
+- 按sortOrder字段升序排序
+- 优先使用displayImg，不存在时使用mainImg
+- 过滤status为false或delFlag为true的项
 
 现在让我进行验收标准的测试性分析：
 
@@ -388,6 +695,54 @@ const routes = [
 *对于任何*网络异常情况，应提供缓存数据或优雅降级，保证基本功能可用
 **验证需求: Requirements 6.5**
 
+### 属性 22: 登录功能完整性
+*对于任何*有效的用户名/密码组合，登录操作应调用API、接收响应、存储token和用户信息到状态管理和本地存储
+**验证需求: Requirements 7.2, 7.3**
+
+### 属性 23: 表单验证准确性
+*对于任何*注册表单输入，系统应根据验证规则（邮箱格式、密码强度等）正确判断输入是否有效
+**验证需求: Requirements 7.5**
+
+### 属性 24: 验证码发送限制
+*对于任何*验证码发送请求，在60秒内不应允许重复发送到同一邮箱
+**验证需求: Requirements 7.6**
+
+### 属性 25: 密码确认一致性
+*对于任何*注册表单提交，系统应验证两次密码输入是否完全一致
+**验证需求: Requirements 7.7**
+
+### 属性 26: Token过期处理
+*对于任何*401未授权响应，系统应清除认证状态并跳转到登录页面
+**验证需求: Requirements 7.10**
+
+### 属性 27: 请求Token自动注入
+*对于任何*需要认证的HTTP请求，请求拦截器应自动添加"Bearer "前缀的token到Authorization头
+**验证需求: Requirements 8.2**
+
+### 属性 28: Token自动刷新
+*对于任何*包含"new-token"响应头的响应，系统应自动更新本地存储的访问令牌
+**验证需求: Requirements 8.3, 8.4**
+
+### 属性 29: 错误统一处理
+*对于任何*失败的HTTP请求，系统应返回标准化的错误信息格式
+**验证需求: Requirements 8.5**
+
+### 属性 30: 响应数据自动提取
+*对于任何*标准封装格式的API响应，响应拦截器应自动提取result字段中的实际数据
+**验证需求: Requirements 8.6**
+
+### 属性 31: 轮播图数据获取
+*对于任何*首页加载，系统应从后端API获取轮播图数据
+**验证需求: Requirements 9.1**
+
+### 属性 32: 轮播图图片选择逻辑
+*对于任何*轮播图数据项，系统应优先使用displayImg，当displayImg为null时使用mainImg作为展示图片
+**验证需求: Requirements 9.2, 9.3**
+
+### 属性 33: 轮播图排序正确性
+*对于任何*轮播图数据集合，展示时应按sortOrder字段升序排序
+**验证需求: Requirements 9.6**
+
 ## 错误处理
 
 ### 网络错误处理
@@ -399,16 +754,26 @@ const routes = [
 - 商品数据格式验证
 - 购物车数据完整性检查
 - 用户输入数据校验
+- 表单字段验证（邮箱格式、密码强度、必填项）
+
+### 认证错误处理
+- 登录失败时显示错误提示
+- Token过期时自动跳转登录页
+- 401未授权错误统一处理
+- 注册失败时显示具体错误原因
+- 验证码发送失败时提供重试选项
 
 ### 路由错误处理
 - 404页面处理
 - 路由参数验证
 - 权限检查（如需要）
+- 登录状态检查
 
 ### 状态管理错误
 - Store数据异常恢复
 - 本地存储读写异常处理
 - 状态同步失败处理
+- 认证状态恢复失败处理
 
 ## 测试策略
 
@@ -434,10 +799,11 @@ const routes = [
 - 属性测试通过随机化提供全面的输入覆盖
 
 ### 测试覆盖范围
-- 组件单元测试：覆盖所有UI组件
-- 状态管理测试：覆盖所有Store操作
-- 路由测试：覆盖所有路由跳转
-- 集成测试：覆盖关键用户流程
+- 组件单元测试：覆盖所有UI组件（包括登录、注册表单）
+- 状态管理测试：覆盖所有Store操作（包括认证状态管理）
+- 路由测试：覆盖所有路由跳转（包括路由守卫）
+- HTTP请求测试：覆盖请求/响应拦截器逻辑
+- 集成测试：覆盖关键用户流程（登录、注册、购物流程）
 - 性能测试：覆盖加载时间和响应性能
 
 ### 测试环境配置

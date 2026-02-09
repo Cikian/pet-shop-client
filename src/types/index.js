@@ -110,6 +110,65 @@
  * @property {ProductFilter} filters - 当前筛选条件
  */
 
+/**
+ * 用户数据接口
+ * @typedef {Object} User
+ * @property {string} id - 用户唯一标识符
+ * @property {string} username - 用户名
+ * @property {string} nickname - 昵称
+ * @property {string} avatar - 头像URL
+ * @property {string} birthday - 生日
+ * @property {number} sex - 性别 (0: 未知, 1: 男, 2: 女)
+ * @property {string} email - 邮箱
+ * @property {string} phone - 手机号
+ * @property {string} userSource - 用户来源
+ * @property {number} status - 状态
+ * @property {string} lastLoginTime - 最后登录时间
+ * @property {string} lastLoginIp - 最后登录IP
+ * @property {string} createTime - 创建时间
+ */
+
+/**
+ * 认证响应接口
+ * @typedef {Object} AuthResponse
+ * @property {string} accessToken - 访问令牌
+ * @property {string|null} refreshToken - 刷新令牌
+ * @property {string} tokenType - 令牌类型
+ * @property {number|null} expiresIn - 过期时间（秒）
+ * @property {User} user - 用户信息
+ * @property {string[]} authorities - 权限列表
+ */
+
+/**
+ * 登录请求接口
+ * @typedef {Object} LoginRequest
+ * @property {string} username - 用户名或邮箱
+ * @property {string} password - 密码
+ */
+
+/**
+ * 注册请求接口
+ * @typedef {Object} RegisterRequest
+ * @property {string} userName - 用户名
+ * @property {string} email - 邮箱
+ * @property {string} captcha - 邮箱验证码
+ * @property {string} password - 密码
+ * @property {string} [phone] - 手机号（可选）
+ * @property {string} [nickname] - 昵称（可选）
+ * @property {string} [avatar] - 头像URL（可选）
+ */
+
+/**
+ * API标准响应接口
+ * @typedef {Object} ApiStandardResponse
+ * @template T
+ * @property {boolean} success - 请求是否成功
+ * @property {string} message - 响应消息
+ * @property {number} code - 响应状态码
+ * @property {T} result - 响应数据
+ * @property {number} timestamp - 时间戳
+ */
+
 // 导出类型定义（用于JSDoc引用）
 export const Types = {
   /** @type {Product} */
@@ -131,5 +190,15 @@ export const Types = {
   /** @type {PaginationData} */
   PaginationData: {},
   /** @type {ProductListResponse} */
-  ProductListResponse: {}
+  ProductListResponse: {},
+  /** @type {User} */
+  User: {},
+  /** @type {AuthResponse} */
+  AuthResponse: {},
+  /** @type {LoginRequest} */
+  LoginRequest: {},
+  /** @type {RegisterRequest} */
+  RegisterRequest: {},
+  /** @type {ApiStandardResponse} */
+  ApiStandardResponse: {}
 }
