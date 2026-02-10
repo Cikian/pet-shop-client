@@ -1,5 +1,11 @@
 <template>
-  <AppLayout>
+  <!-- 登录和注册页面不使用布局 -->
+  <template v-if="isAuthPage">
+    <router-view />
+  </template>
+  
+  <!-- 其他页面使用标准布局 -->
+  <AppLayout v-else>
     <router-view />
     <!-- 离线状态提示 -->
     <OfflineStatus />
@@ -7,7 +13,8 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import OfflineStatus from '@/components/common/OfflineStatus.vue'
 import { useMobile } from '@/composables/useMobile.js'
@@ -16,6 +23,12 @@ import { useNavigationStore } from '@/stores/navigation.js'
 // 初始化移动端优化
 const mobile = useMobile()
 const navigationStore = useNavigationStore()
+const route = useRoute()
+
+// 判断是否是认证页面（登录/注册）
+const isAuthPage = computed(() => {
+  return route.name === 'Login' || route.name === 'Register'
+})
 
 onMounted(() => {
   // 初始化导航状态

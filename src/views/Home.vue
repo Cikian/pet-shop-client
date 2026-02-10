@@ -1,102 +1,43 @@
 <template>
-  <div class="home">
-    <!-- 网络状态监控 -->
-    <NetworkStatus />
-    
-    <!-- 错误边界 -->
-    <ErrorBoundary 
-      :show-retry="true"
-      :show-reload="true"
-      :on-retry="handleRetry"
-      @error="handleError"
-    >
-      <!-- 轮播图 -->
-      <section class="hero-section">
-        <LoadingSkeleton 
-          v-if="bannersLoading" 
-          type="banner" 
-          :animated="true"
-        />
-        <HeroBanner 
-          v-else
-          :banners="banners"
-          :autoplay="true"
-          :autoplay-interval="5000"
-          @banner-click="handleBannerClick"
-        />
-      </section>
+    <div class="home">
+        <NetworkStatus />
 
-      <!-- 商品分类 -->
-      <section class="category-section">
-        <LoadingSkeleton 
-          v-if="categoriesLoading" 
-          type="category-grid" 
-          :count="6"
-          :animated="true"
-        />
-        <CategoryGrid 
-          v-else
-          :categories="categories"
-          :columns="3"
-          @category-click="handleCategoryClick"
-        />
-      </section>
+        <ErrorBoundary :show-retry="true" :show-reload="true" :on-retry="handleRetry" @error="handleError">
+            <section class="hero-section">
+                <LoadingSkeleton v-if="bannersLoading" type="banner" :animated="true" />
+                <Slideshow v-else :banners="banners" :interval="autoplayInterval" @click="handleBannerClick" />
+            </section>
 
-      <!-- 推荐商品 -->
-      <section class="featured-section">
-        <div class="section-header">
-          <h2 class="section-title">精选推荐</h2>
-          <p class="section-subtitle">为你精心挑选的优质商品</p>
-        </div>
-        
-        <LoadingSkeleton 
-          v-if="productsLoading" 
-          type="product-list" 
-          :count="4"
-          :animated="true"
-        />
-        <ProductCarousel 
-          v-else
-          :products="featuredProducts"
-          title=""
-          subtitle=""
-          :items-per-page="4"
-          :show-navigation="true"
-          :show-indicators="true"
-          @add-to-cart="handleAddToCart"
-          @product-click="handleProductClick"
-        />
-      </section>
+            <section class="category-section">
+                <LoadingSkeleton v-if="categoriesLoading" type="category-grid" :count="6" :animated="true" />
+                <CategoryGrid v-else :categories="categories" :columns="3" @category-click="handleCategoryClick" />
+            </section>
 
-      <!-- 促销商品 -->
-      <section class="sale-section">
-        <div class="section-header">
-          <h2 class="section-title">限时优惠</h2>
-          <p class="section-subtitle">错过就要等下次了</p>
-        </div>
-        
-        <LoadingSkeleton 
-          v-if="productsLoading" 
-          type="product-list" 
-          :count="4"
-          :animated="true"
-        />
-        <ProductCarousel 
-          v-else
-          :products="saleProducts"
-          title=""
-          subtitle=""
-          :items-per-page="4"
-          :show-navigation="true"
-          :show-indicators="true"
-          :autoplay="true"
-          :autoplay-interval="6000"
-          @add-to-cart="handleAddToCart"
-          @product-click="handleProductClick"
-        />
-      </section>
-    </ErrorBoundary>
-  </div>
+            <section class="featured-section">
+                <div class="section-header">
+                    <h2 class="section-title">精选推荐</h2>
+                    <p class="section-subtitle">为你精心挑选的优质商品</p>
+                </div>
+
+                <LoadingSkeleton v-if="productsLoading" type="product-list" :count="4" :animated="true" />
+                <ProductCarousel v-else :products="featuredProducts" title="" subtitle="" :items-per-page="4"
+                    :show-navigation="true" :show-indicators="true" @add-to-cart="handleAddToCart"
+                    @product-click="handleProductClick" />
+            </section>
+
+            <section class="sale-section">
+                <div class="section-header">
+                    <h2 class="section-title">限时优惠</h2>
+                    <p class="section-subtitle">错过就要等下次了</p>
+                </div>
+
+                <LoadingSkeleton v-if="productsLoading" type="product-list" :count="4" :animated="true" />
+                <ProductCarousel v-else :products="saleProducts" title="" subtitle="" :items-per-page="4"
+                    :show-navigation="true" :show-indicators="true" :autoplay="true" :autoplay-interval="6000"
+                    @add-to-cart="handleAddToCart" @product-click="handleProductClick" />
+            </section>
+        </ErrorBoundary>
+    </div>
 </template>
 
 <script setup>
@@ -105,13 +46,17 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useCartStore } from '@/stores/cart'
 import { useProductStore } from '@/stores/product'
-import HeroBanner from '@/components/common/HeroBanner.vue'
+
+// 引入你刚刚保存的新组件
+import Slideshow from '@/components/common/Slideshow.vue'
+
 import CategoryGrid from '@/components/common/CategoryGrid.vue'
 import ProductCarousel from '@/components/common/ProductCarousel.vue'
 import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue'
 import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
 import NetworkStatus from '@/components/common/NetworkStatus.vue'
-import { mockBanners, getFeaturedProducts, getOnSaleProducts, updateCategoryProductCounts } from '@/data/mockData'
+import { getFeaturedProducts, getOnSaleProducts, updateCategoryProductCounts } from '@/data/mockData'
+import { getSlideListApi } from '@/api/home'
 
 const router = useRouter()
 const cartStore = useCartStore()
@@ -125,159 +70,120 @@ const saleProducts = ref([])
 const bannersLoading = ref(true)
 const categoriesLoading = ref(true)
 const productsLoading = ref(true)
-
-// 计算属性
-const isLoading = computed(() => {
-  return bannersLoading.value || categoriesLoading.value || productsLoading.value
-})
-
-/**
- * 处理轮播图点击
- */
-const handleBannerClick = (banner) => {
-  console.log('Banner clicked:', banner)
-  ElMessage.success(`点击了轮播图: ${banner.title}`)
-}
-
-/**
- * 处理分类点击
- */
-const handleCategoryClick = (category) => {
-  console.log('Category clicked:', category)
-  router.push({
-    name: 'Category',
-    params: { id: category.id }
-  })
-  ElMessage.success(`选择了分类: ${category.name}`)
-}
-
-/**
- * 处理添加到购物车
- */
-const handleAddToCart = (product) => {
-  try {
-    cartStore.addItem(product, 1)
-    ElMessage.success(`${product.name} 已添加到购物车`)
-  } catch (error) {
-    console.error('Failed to add to cart:', error)
-    ElMessage.error('添加到购物车失败，请重试')
-  }
-}
-
-/**
- * 处理商品点击
- */
-const handleProductClick = (product) => {
-  router.push({
-    name: 'Product',
-    params: { id: product.id }
-  })
-}
-
-/**
- * 处理错误
- */
-const handleError = (errorInfo) => {
-  console.error('Home page error:', errorInfo)
-  ElMessage.error('页面加载出现问题，请刷新重试')
-}
-
-/**
- * 处理重试
- */
-const handleRetry = async () => {
-  try {
-    await initializeData()
-    ElMessage.success('重新加载成功')
-  } catch (error) {
-    console.error('Retry failed:', error)
-    ElMessage.error('重试失败，请稍后再试')
-    throw error
-  }
-}
+const autoplayInterval = ref(5000)
 
 /**
  * 加载轮播图数据
  */
 const loadBanners = async () => {
-  try {
-    bannersLoading.value = true
-    // 模拟API调用延迟
-    await new Promise(resolve => setTimeout(resolve, 300))
-    
-    banners.value = mockBanners.filter(banner => banner.isActive)
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-  } catch (error) {
-    console.error('Failed to load banners:', error)
-    ElMessage.error('轮播图加载失败')
-    throw error
-  } finally {
-    bannersLoading.value = false
-  }
+    try {
+        bannersLoading.value = true
+        const slideList = await getSlideListApi()
+
+        const filteredSlides = slideList.filter(slide =>
+            slide.status !== false && slide.delFlag !== true
+        )
+
+        const sortedSlides = filteredSlides.sort((a, b) => a.sortOrder - b.sortOrder)
+
+        // 映射数据以匹配 Slideshow.vue 的 Props
+        banners.value = sortedSlides.map((slide, index) => {
+            // 为宠物用品设置一组柔和的主题色循环
+            const themeColors = ['#FFCF81', '#74B9FF', '#A29BFE', '#55E6C1'];
+            const bgColors = ['#FFF9F0', '#F0F7FF', '#F5F4FF', '#F0FFF9'];
+
+            return {
+                id: slide.id,
+                title: slide.title || '精选好物',
+                subtitle: slide.description || '给毛孩子更好的陪伴',
+                image: slide.displayImg || slide.mainImg,
+                tag: slide.tag || '宠物推荐',
+                buttonText: slide.btnText || '立即查看',
+                // 链接跳转逻辑
+                link: slide.productId ? `/product/${slide.productId}` : (slide.categoryId ? `/category/${slide.categoryId}` : null),
+                // 注入主题色和背景色
+                themeColor: themeColors[index % themeColors.length],
+                backgroundColor: bgColors[index % bgColors.length]
+            }
+        })
+    } catch (error) {
+        console.error('Failed to load banners:', error)
+        if (error.status !== 401) {
+            ElMessage.error('轮播图加载失败')
+        }
+        banners.value = []
+    } finally {
+        bannersLoading.value = false
+    }
 }
 
 /**
- * 加载分类数据
+ * 处理轮播图点击
  */
+const handleBannerClick = (banner) => {
+    if (banner.link) {
+        router.push(banner.link)
+    } else {
+        ElMessage.info(`查看: ${banner.title}`)
+    }
+}
+
+// ... 保持其他处理函数不变 (handleCategoryClick, handleAddToCart, 等)
+
+const handleCategoryClick = (category) => {
+    router.push({ name: 'Category', params: { id: category.id } })
+}
+
+const handleAddToCart = (product) => {
+    try {
+        cartStore.addItem(product, 1)
+        ElMessage.success(`${product.name} 已添加到购物车`)
+    } catch (error) {
+        ElMessage.error('添加到购物车失败')
+    }
+}
+
+const handleProductClick = (product) => {
+    router.push({ name: 'Product', params: { id: product.id } })
+}
+
+const handleError = (errorInfo) => {
+    ElMessage.error('页面加载出现问题')
+}
+
+const handleRetry = async () => {
+    await initializeData()
+}
+
 const loadCategories = async () => {
-  try {
-    categoriesLoading.value = true
-    await productStore.fetchCategories()
-    
-    categories.value = updateCategoryProductCounts()
-      .filter(category => category.isActive)
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-  } catch (error) {
-    console.error('Failed to load categories:', error)
-    ElMessage.error('分类数据加载失败')
-    throw error
-  } finally {
-    categoriesLoading.value = false
-  }
+    try {
+        categoriesLoading.value = true
+        await productStore.fetchCategories()
+        categories.value = updateCategoryProductCounts()
+            .filter(category => category.isActive)
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+    } finally {
+        categoriesLoading.value = false
+    }
 }
 
-/**
- * 加载商品数据
- */
 const loadProducts = async () => {
-  try {
-    productsLoading.value = true
-    await productStore.fetchProducts()
-    
-    // 加载推荐商品
-    featuredProducts.value = getFeaturedProducts(8)
-    
-    // 加载促销商品
-    saleProducts.value = getOnSaleProducts(6)
-  } catch (error) {
-    console.error('Failed to load products:', error)
-    ElMessage.error('商品数据加载失败')
-    throw error
-  } finally {
-    productsLoading.value = false
-  }
+    try {
+        productsLoading.value = true
+        await productStore.fetchProducts()
+        featuredProducts.value = getFeaturedProducts(8)
+        saleProducts.value = getOnSaleProducts(6)
+    } finally {
+        productsLoading.value = false
+    }
 }
 
-/**
- * 初始化页面数据
- */
 const initializeData = async () => {
-  try {
-    // 并行加载数据以提高性能
-    await Promise.allSettled([
-      loadBanners(),
-      loadCategories(),
-      loadProducts()
-    ])
-  } catch (error) {
-    console.error('Failed to initialize home data:', error)
-    throw error
-  }
+    await Promise.allSettled([loadBanners(), loadCategories(), loadProducts()])
 }
 
-// 生命周期
 onMounted(() => {
-  initializeData()
+    initializeData()
 })
 </script>
 
@@ -285,81 +191,50 @@ onMounted(() => {
 @use '@/styles/variables' as *;
 
 .home {
-  min-height: 100vh;
-  background: $background;
+    min-height: 100vh;
+    background: $background;
 }
 
 .hero-section {
-  margin-bottom: $spacing-2xl;
-  
-  @media (max-width: $breakpoint-md) {
-    margin-bottom: $spacing-xl;
-  }
+    width: 100%;
+    padding: 0; // 移除内边距让轮播图背景铺满
+    margin-bottom: $spacing-2xl;
+
+    @media (max-width: $breakpoint-md) {
+        margin-bottom: $spacing-xl;
+    }
 }
 
+// 保持其他样式不变...
 .category-section {
-  max-width: 1200px;
-  margin: 0 auto $spacing-2xl auto;
-  padding: 0 $spacing-lg;
-  
-  @media (max-width: $breakpoint-md) {
-    margin-bottom: $spacing-xl;
-    padding: 0 $spacing-md;
-  }
+    max-width: 1200px;
+    margin: 0 auto $spacing-2xl auto;
+    padding: 0 $spacing-lg;
 }
-
-.featured-section,
-.sale-section {
-  max-width: 1200px;
-  margin: 0 auto $spacing-2xl auto;
-  padding: 0 $spacing-lg;
-  
-  @media (max-width: $breakpoint-md) {
-    margin-bottom: $spacing-xl;
-    padding: 0 $spacing-md;
-  }
+.featured-section {
+    max-width: 1200px;
+    margin: 0 auto $spacing-2xl auto;
+    padding: 0 $spacing-lg;
 }
-
 .sale-section {
-  margin-bottom: 0; // 最后一个section不需要底部间距
+    max-width: 1200px;
+    margin: 0 auto $spacing-2xl auto;
+    padding: 0 $spacing-lg;
 }
 
 .section-header {
-  text-align: center;
-  margin-bottom: $spacing-xl;
-  
-  @media (max-width: $breakpoint-md) {
-    margin-bottom: $spacing-lg;
-  }
+    text-align: center;
+    margin-bottom: $spacing-xl;
 }
 
 .section-title {
-  font-size: $font-size-2xl;
-  font-weight: 700;
-  color: $text-primary;
-  margin: 0 0 $spacing-sm 0;
-  
-  @media (max-width: $breakpoint-md) {
-    font-size: $font-size-xl;
-  }
+    font-size: $font-size-2xl;
+    font-weight: 700;
+    color: $text-primary;
 }
 
 .section-subtitle {
-  font-size: $font-size-base;
-  color: $text-secondary;
-  margin: 0;
-  
-  @media (max-width: $breakpoint-md) {
-    font-size: $font-size-sm;
-  }
-}
-
-// 响应式调整
-@media (max-width: $breakpoint-sm) {
-  .category-section,
-  .featured-section,
-  .sale-section {
-    padding: 0 $spacing-sm;
-  }
+    font-size: $font-size-base;
+    color: $text-secondary;
 }
 </style>

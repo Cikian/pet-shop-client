@@ -11,14 +11,14 @@ const routes = [
     path: '/category/:id?',
     name: 'Category',
     component: () => import('@/views/Category.vue'),
-    meta: { title: '商品分类', requiresAuth: false },
+    meta: { title: '商品分类', requiresAuth: true },
     props: true
   },
   {
     path: '/product/:id',
     name: 'Product',
     component: () => import('@/views/Product.vue'),
-    meta: { title: '商品详情', requiresAuth: false },
+    meta: { title: '商品详情', requiresAuth: true },
     props: true,
     beforeEnter: (to, from, next) => {
       // 验证商品ID格式
@@ -33,13 +33,13 @@ const routes = [
     path: '/cart',
     name: 'Cart',
     component: () => import('@/views/Cart.vue'),
-    meta: { title: '购物车', requiresAuth: false }
+    meta: { title: '购物车', requiresAuth: true }
   },
   {
     path: '/search',
     name: 'Search',
     component: () => import('@/views/Search.vue'),
-    meta: { title: '搜索结果', requiresAuth: false }
+    meta: { title: '搜索结果', requiresAuth: true }
   },
   {
     path: '/login',

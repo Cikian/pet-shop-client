@@ -29,25 +29,24 @@ import AppFooter from './AppFooter.vue'
 }
 
 .main-content {
-  flex: 1;
-  width: 100%;
-  
-  .content-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1rem;
-    min-height: calc(100vh - 64px - 200px); // 减去header和footer的大概高度
+    flex: 1;
+    width: 100%;
+    
+    .content-container {
+      width: 100%;
+      padding: 0 1rem;
+      min-height: calc(100vh - 64px - 200px); // 减去header和footer的大概高度
 
-    @media (max-width: 768px) {
-      padding: 0.75rem;
-      min-height: calc(100vh - 56px - 180px);
-    }
+      @media (max-width: 768px) {
+        padding: 0.75rem;
+        min-height: calc(100vh - 56px - 180px);
+      }
 
-    @media (max-width: 480px) {
-      padding: 0.5rem;
+      @media (max-width: 480px) {
+        padding: 0.5rem;
+      }
     }
   }
-}
 
 // 响应式容器工具类
 .container {

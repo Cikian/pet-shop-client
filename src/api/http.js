@@ -78,10 +78,13 @@ http.interceptors.response.use(
       // 清除认证状态
       localStorage.removeItem('mall-auth')
       
-      // 跳转到登录页面
-      // 注意：在拦截器中不能直接使用useRouter，需要使用window.location
+      // 只有在需要认证的页面才跳转到登录页
+      // 首页等公开页面即使API返回401也不跳转
       const currentPath = window.location.pathname
-      if (currentPath !== '/login') {
+      const publicPaths = ['/', '/login', '/register', '/demo']
+      const isPublicPath = publicPaths.includes(currentPath) || currentPath.startsWith('/product/')
+      
+      if (!isPublicPath && currentPath !== '/login') {
         window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`
       }
     }

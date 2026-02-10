@@ -568,7 +568,7 @@ onUnmounted(() => {
     }
 
     &.is-focus {
-      box-shadow: 0 4px 12px rgba($primary-color-rgb, 0.2);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
     }
   }
 }
@@ -595,7 +595,7 @@ onUnmounted(() => {
 
     &:not(:disabled):hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba($primary-color-rgb, 0.3);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
     }
 
     &:disabled {
@@ -658,7 +658,7 @@ onUnmounted(() => {
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba($primary-color-rgb, 0.3);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
   }
 
   &:active {
