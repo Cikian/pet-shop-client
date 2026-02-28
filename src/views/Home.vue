@@ -55,8 +55,8 @@ import ProductCarousel from '@/components/common/ProductCarousel.vue'
 import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue'
 import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
 import NetworkStatus from '@/components/common/NetworkStatus.vue'
-import { getFeaturedProducts, getOnSaleProducts, updateCategoryProductCounts } from '@/data/mockData'
-import { getSlideListApi } from '@/api/home'
+
+import { getSlideListApi, getHomeCategoriesApi, getHomeRecommendApi, getHomeDiscountApi } from '@/api/home'
 
 const router = useRouter()
 const cartStore = useCartStore()
@@ -158,10 +158,20 @@ const handleRetry = async () => {
 const loadCategories = async () => {
     try {
         categoriesLoading.value = true
-        await productStore.fetchCategories()
-        categories.value = updateCategoryProductCounts()
-            .filter(category => category.isActive)
-            .sort((a, b) => a.sortOrder - b.sortOrder)
+        const response = await getHomeCategoriesApi()
+        console.log('API Response:', response)
+        categories.value = response.map(category => ({
+            id: category.id,
+            name: category.name,
+            description: category.description,
+            image: category.imgUrl,
+            status: category.status,
+            onHome: category.onHome,
+            delFlag: category.delFlag
+        }))
+    } catch (error) {
+        console.error('Failed to load categories:', error)
+        categories.value = []
     } finally {
         categoriesLoading.value = false
     }
@@ -170,9 +180,26 @@ const loadCategories = async () => {
 const loadProducts = async () => {
     try {
         productsLoading.value = true
-        await productStore.fetchProducts()
-        featuredProducts.value = getFeaturedProducts(8)
-        saleProducts.value = getOnSaleProducts(6)
+        const [recommendResponse, discountResponse] = await Promise.all([
+            getHomeRecommendApi(),
+            getHomeDiscountApi()
+        ])
+        featuredProducts.value = (recommendResponse || []).map(product => ({
+            ...product,
+            image: product.mainImg,
+            rating: product.score,
+            reviewCount: 0
+        }))
+        saleProducts.value = (discountResponse || []).map(product => ({
+            ...product,
+            image: product.mainImg,
+            rating: product.score,
+            reviewCount: 0
+        }))
+    } catch (error) {
+        console.error('Failed to load products:', error)
+        featuredProducts.value = []
+        saleProducts.value = []
     } finally {
         productsLoading.value = false
     }
@@ -211,11 +238,13 @@ onMounted(() => {
     margin: 0 auto $spacing-2xl auto;
     padding: 0 $spacing-lg;
 }
+
 .featured-section {
     max-width: 1200px;
     margin: 0 auto $spacing-2xl auto;
     padding: 0 $spacing-lg;
 }
+
 .sale-section {
     max-width: 1200px;
     margin: 0 auto $spacing-2xl auto;

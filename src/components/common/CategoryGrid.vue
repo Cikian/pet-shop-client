@@ -23,7 +23,6 @@
         
         <div class="category-info">
           <h3 class="category-name">{{ category.name }}</h3>
-          <p class="category-count">{{ category.productCount }} 件商品</p>
           <p v-if="category.description" class="category-desc">
             {{ category.description }}
           </p>
@@ -268,12 +267,7 @@ const gridStyle = computed(() => ({
   }
 }
 
-.category-count {
-  font-size: $font-size-sm;
-  color: $primary-color;
-  font-weight: 500;
-  margin: 0 0 $spacing-xs 0;
-}
+
 
 .category-desc {
   font-size: $font-size-sm;
@@ -314,7 +308,6 @@ const gridStyle = computed(() => ({
   }
   
   .category-name,
-  .category-count,
   .category-desc {
     background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
     background-size: 200% 100%;

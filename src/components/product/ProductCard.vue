@@ -164,7 +164,7 @@ const displayTags = computed(() => {
 })
 
 const defaultImage = computed(() => {
-  return 'https://via.placeholder.com/300x300/f5f5f5/cccccc?text=暂无图片'
+  return 'https://img-upyun.cikian.cn/petShop/product/4.jpg'
 })
 
 // 方法
