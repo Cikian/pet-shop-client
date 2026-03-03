@@ -95,7 +95,8 @@
                                         <button v-for="val in spec.values" :key="val" class="spec-item-btn" :class="{
                                             'is-active': selectedSpecs[spec.name] === val,
                                             'is-disabled': isOptionDisabled(spec.name, val)
-                                        }" :disabled="isOptionDisabled(spec.name, val)" @click="handleSpecSelect(spec.name, val)">
+                                        }" :disabled="isOptionDisabled(spec.name, val)"
+                                            @click="handleSpecSelect(spec.name, val)">
                                             {{ val }}
                                         </button>
                                     </div>
@@ -187,24 +188,30 @@ const currentImage = ref('')
 const product = ref(null)
 
 // --- SKU 核心逻辑 ---
-const selectedSpecs = reactive({}) // { "形状": "L形" }
-const pathDict = ref({}) // 路径字典，用于计算禁用状态
+const selectedSpecs = reactive({})
+const pathDict = ref({})
 
 // 计算属性
 const productId = computed(() => route.params.id)
 
-// 是否选完了所有规格
 const isAllSpecsSelected = computed(() => {
     if (!product.value?.specs) return true
     return product.value.specs.every(s => selectedSpecs[s.name])
 })
 
-// 查找匹配的 SKU 对象
 const currentSku = computed(() => {
     if (!isAllSpecsSelected.value || !product.value?.skus) return null
     return product.value.skus.find(sku => {
         return sku.specs.every(s => selectedSpecs[s.key] === s.value)
     })
+})
+
+// --- 新增：监听 SKU 变化以切换图片 ---
+watch(currentSku, (newSku) => {
+    // 如果切换到的新 SKU 带有图片，则更新大图展示
+    if (newSku && newSku.image) {
+        currentImage.value = newSku.image
+    }
 })
 
 // 动态显示价格
@@ -218,14 +225,11 @@ const displayStock = computed(() => {
 })
 
 // --- SKU 算法方法 ---
-
-// 构建路径字典 (Power Set)
 const buildPathDict = (skus) => {
     const dict = {}
     skus.forEach(sku => {
         if (sku.stock <= 0) return
         const tokens = sku.specs.map(s => `${s.key}:${s.value}`)
-        // 获取子集
         const subsets = [[]]
         for (const token of tokens) {
             const size = subsets.length
@@ -242,10 +246,8 @@ const buildPathDict = (skus) => {
     return dict
 }
 
-// 检查某个按钮是否应禁用
 const isOptionDisabled = (specName, specValue) => {
     if (!product.value) return false
-    // 模拟选中当前项后的路径组合
     const nextSelect = { ...selectedSpecs, [specName]: specValue }
     const tokens = Object.keys(nextSelect)
         .filter(k => nextSelect[k])
@@ -264,7 +266,6 @@ const handleSpecSelect = (specName, specValue) => {
 }
 
 // --- 基础业务逻辑 ---
-
 const getCategoryName = (categoryId) => {
     const category = productStore.getCategoryById(categoryId)
     return category?.name || '未知分类'
@@ -280,20 +281,16 @@ const addToCart = () => {
         ElMessage.warning('商品暂无库存')
         return
     }
-
     if (!isAllSpecsSelected.value) {
         ElMessage.warning('请选择完整的商品规格')
         return
     }
-
-    // 构建加入购物车的数据
     const cartItem = {
         ...product.value,
         price: displayPrice.value,
         skuId: currentSku.value?.id,
         skuName: currentSku.value?.specs.map(s => s.value).join(' ')
     }
-
     cartStore.addItem(cartItem, selectedQuantity.value)
     ElMessage.success(`已添加商品到购物车`)
 }
@@ -310,41 +307,32 @@ const initializeProduct = async () => {
         const productData = await productApi.getProductDetail(productId.value)
         const allImages = [productData.mainImg, ...productData.images]
 
-        // 初始化规格选中状态
         if (productData.specs) {
             productData.specs.forEach(s => selectedSpecs[s.name] = null)
-            // 生成路径图
             pathDict.value = buildPathDict(productData.skus)
         }
 
         product.value = {
             ...productData,
-            id: productData.id,
-            name: productData.name,
-            description: productData.description,
-            image: productData.mainImg,
             images: allImages,
             category: productData.categoryId,
-            price: productData.price,
-            originalPrice: productData.originalPrice,
-            stock: productData.stock,
             rating: productData.score,
             reviewCount: 0,
-            tags: productData.tags,
-            isFavorite: false,
-            specs: productData.specs,
-            skus: productData.skus
+            isFavorite: false
         }
 
-        // 默认选中逻辑：选中第一个 SKU 的规格
+        // --- 修正：默认选中逻辑与图片同步 ---
         if (productData.skus && productData.skus.length > 0) {
             const defaultSku = productData.skus[0]
             defaultSku.specs.forEach(s => {
                 selectedSpecs[s.key] = s.value
             })
+            // 初始化图片：优先使用默认 SKU 的图片，没有则用主图
+            currentImage.value = defaultSku.image || productData.mainImg
+        } else {
+            currentImage.value = productData.mainImg
         }
 
-        currentImage.value = product.value.image
         selectedQuantity.value = 1
     } catch (error) {
         console.error('初始化失败:', error)
@@ -455,6 +443,7 @@ onMounted(initializeProduct)
         padding: $spacing-lg;
         border-radius: 12px;
         margin-bottom: $spacing-lg;
+        height: 160px;
 
         .current-price {
             font-size: 32px;
