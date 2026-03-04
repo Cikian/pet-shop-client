@@ -82,15 +82,11 @@
 
           <!-- 购物车图标 -->
           <div class="cart-wrapper">
-            <div class="cart-trigger" @click="toggleCart">
+            <router-link to="/cart" class="cart-trigger">
               <el-badge :value="cartCount" :hidden="cartCount === 0" class="cart-badge">
                 <el-icon class="cart-icon"><ShoppingCart /></el-icon>
               </el-badge>
               <span class="cart-text">购物车</span>
-            </div>
-            <!-- 购物车页面链接（移动端） -->
-            <router-link to="/cart" class="cart-page-link">
-              <el-icon><ArrowRight /></el-icon>
             </router-link>
           </div>
 
@@ -139,12 +135,6 @@
           <router-link to="/register" @click="closeMobileMenu">注册</router-link>
         </div>
       </div>
-
-      <!-- 购物车抽屉 -->
-      <CartDrawer 
-        v-model="showCartDrawer" 
-        @checkout="handleCheckout"
-      />
     </header>
   </transition>
 </template>
@@ -159,13 +149,11 @@ import {
   ShoppingCart, 
   Shop, 
   Menu, 
-  ArrowRight,
   User,
   ArrowDown,
   Document,
   SwitchButton
 } from '@element-plus/icons-vue'
-import { CartDrawer } from '@/components/cart'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
@@ -175,7 +163,6 @@ const authStore = useAuthStore()
 // 响应式数据
 const searchKeyword = ref('')
 const showMobileMenu = ref(false)
-const showCartDrawer = ref(false)
 const isHeaderVisible = ref(true)
 const lastScrollTop = ref(0)
 const isHomePage = ref(false)
@@ -227,11 +214,6 @@ const toggleMobileMenu = () => {
 
 const closeMobileMenu = () => {
   showMobileMenu.value = false
-}
-
-const toggleCart = () => {
-  showCartDrawer.value = !showCartDrawer.value
-  cartStore.toggleCartVisibility()
 }
 
 const handleCheckout = (checkoutData) => {
@@ -515,7 +497,6 @@ watch(
       position: relative;
       display: flex;
       align-items: center;
-      gap: 8px;
 
       .cart-trigger {
         display: flex;
@@ -526,7 +507,8 @@ watch(
         border-radius: 8px;
         transition: all 0.3s ease;
         cursor: pointer;
-        min-height: 44px; // 增大触摸区域
+        text-decoration: none;
+        min-height: 44px;
         min-width: 44px;
 
         &:hover {
@@ -534,7 +516,6 @@ watch(
           color: var(--primary-color);
         }
         
-        // 移动端触摸反馈
         @media (max-width: 768px) {
           &:active {
             transform: scale(0.95);
@@ -552,31 +533,6 @@ watch(
           @media (max-width: 768px) {
             display: none;
           }
-        }
-      }
-
-      .cart-page-link {
-        display: none;
-        color: var(--text-secondary);
-        padding: 8px;
-        border-radius: 4px;
-        transition: all 0.3s ease;
-        min-height: 44px;
-        min-width: 44px;
-        align-items: center;
-        justify-content: center;
-
-        &:hover {
-          color: var(--primary-color);
-          background: var(--background);
-        }
-        
-        &:active {
-          transform: scale(0.95);
-        }
-
-        @media (max-width: 768px) {
-          display: flex;
         }
       }
 

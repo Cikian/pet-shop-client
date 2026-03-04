@@ -128,6 +128,11 @@
                                     </el-icon>
                                     {{ displayStock === 0 ? '暂无库存' : (isAllSpecsSelected ? '加入购物车' : '请选择规格') }}
                                 </el-button>
+                                <el-button type="warning" size="large"
+                                    :disabled="!isAllSpecsSelected || displayStock === 0" @click="buyNow"
+                                    class="buy-now-btn">
+                                    立即购买
+                                </el-button>
                                 <el-button size="large" :icon="product.isFavorite ? StarFilled : Star"
                                     @click="toggleFavorite" class="favorite-btn">
                                     {{ product.isFavorite ? '已收藏' : '收藏' }}
@@ -164,6 +169,7 @@ import { useProductStore } from '@/stores/product.js'
 import { useCartStore } from '@/stores/cart.js'
 import { useNavigationStore } from '@/stores/navigation.js'
 import { productApi } from '@/api/product.js'
+import { addToCartApi } from '@/api/cart.js'
 import { ElMessage } from 'element-plus'
 import {
     ArrowLeft,
@@ -224,6 +230,13 @@ const displayStock = computed(() => {
     return currentSku.value ? currentSku.value.stock : (product.value?.stock || 0)
 })
 
+// --- 修复：监听库存变化，自动调整数量 ---
+watch(displayStock, (newStock) => {
+    if (selectedQuantity.value > newStock) {
+        selectedQuantity.value = newStock > 0 ? newStock : 1
+    }
+})
+
 // --- SKU 算法方法 ---
 const buildPathDict = (skus) => {
     const dict = {}
@@ -276,7 +289,7 @@ const goBack = () => {
     router.push(backRoute)
 }
 
-const addToCart = () => {
+const addToCart = async () => {
     if (!product.value || displayStock.value === 0) {
         ElMessage.warning('商品暂无库存')
         return
@@ -285,20 +298,41 @@ const addToCart = () => {
         ElMessage.warning('请选择完整的商品规格')
         return
     }
-    const cartItem = {
-        ...product.value,
-        price: displayPrice.value,
-        skuId: currentSku.value?.id,
-        skuName: currentSku.value?.specs.map(s => s.value).join(' ')
+    try {
+        await addToCartApi({
+            skuId: currentSku.value?.id,
+            quantity: selectedQuantity.value
+        })
+        const cartItem = {
+            ...product.value,
+            price: displayPrice.value,
+            skuId: currentSku.value?.id,
+            skuName: currentSku.value?.specs.map(s => s.value).join(' ')
+        }
+        cartStore.addItem(cartItem, selectedQuantity.value)
+        ElMessage.success(`已添加商品到购物车`)
+    } catch (error) {
+        ElMessage.error('添加购物车失败')
+        console.error(error)
     }
-    cartStore.addItem(cartItem, selectedQuantity.value)
-    ElMessage.success(`已添加商品到购物车`)
 }
 
 const toggleFavorite = () => {
     if (!product.value) return
     product.value.isFavorite = !product.value.isFavorite
     ElMessage.success(product.value.isFavorite ? '已添加到收藏' : '已取消收藏')
+}
+
+const buyNow = () => {
+    if (!product.value || displayStock.value === 0) {
+        ElMessage.warning('商品暂无库存')
+        return
+    }
+    if (!isAllSpecsSelected.value) {
+        ElMessage.warning('请选择完整的商品规格')
+        return
+    }
+    ElMessage.success('演示功能：立即购买功能开发中')
 }
 
 const initializeProduct = async () => {
@@ -537,6 +571,13 @@ onMounted(initializeProduct)
         margin-bottom: $spacing-xl;
 
         .add-to-cart-btn {
+            flex: 1;
+            height: 48px;
+            border-radius: 24px;
+            font-weight: 600;
+        }
+
+        .buy-now-btn {
             flex: 1;
             height: 48px;
             border-radius: 24px;
