@@ -16,16 +16,12 @@ export const useCartStore = defineStore('cart', {
     /** @type {boolean} */
     loading: false,
     /** @type {Object|null} */
-    error: null
+    error: null,
+    /** @type {number} */
+    totalCount: 0
   }),
   
   getters: {
-    /**
-     * 购物车商品总数量
-     * @returns {number} 总数量
-     */
-    totalCount: (state) => state.items.reduce((sum, item) => sum + item.quantity, 0),
-    
     /**
      * 购物车商品总价格
      * @returns {number} 总价格
@@ -258,10 +254,11 @@ export const useCartStore = defineStore('cart', {
     },
     
     /**
-     * 初始化购物车，从本地存储加载数据
+     * 更新购物车总数量
+     * @param {number} count - 总数量
      */
-    initialize() {
-      this.loadFromLocalStorage()
-    }
+    updateTotalCount(count) {
+      this.totalCount = count
+    },
   }
 })

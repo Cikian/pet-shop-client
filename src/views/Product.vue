@@ -95,7 +95,8 @@
                                         <button v-for="val in spec.values" :key="val" class="spec-item-btn" :class="{
                                             'is-active': selectedSpecs[spec.name] === val,
                                             'is-disabled': isOptionDisabled(spec.name, val)
-                                        }" :disabled="isOptionDisabled(spec.name, val)" @click="handleSpecSelect(spec.name, val)">
+                                        }" :disabled="isOptionDisabled(spec.name, val)"
+                                            @click="handleSpecSelect(spec.name, val)">
                                             {{ val }}
                                         </button>
                                     </div>
@@ -126,6 +127,11 @@
                                         <ShoppingCart />
                                     </el-icon>
                                     {{ displayStock === 0 ? '暂无库存' : (isAllSpecsSelected ? '加入购物车' : '请选择规格') }}
+                                </el-button>
+                                <el-button type="warning" size="large"
+                                    :disabled="!isAllSpecsSelected || displayStock === 0" @click="buyNow"
+                                    class="buy-now-btn">
+                                    立即购买
                                 </el-button>
                                 <el-button size="large" :icon="product.isFavorite ? StarFilled : Star"
                                     @click="toggleFavorite" class="favorite-btn">
@@ -163,6 +169,7 @@ import { useProductStore } from '@/stores/product.js'
 import { useCartStore } from '@/stores/cart.js'
 import { useNavigationStore } from '@/stores/navigation.js'
 import { productApi } from '@/api/product.js'
+import { addToCartApi } from '@/api/cart.js'
 import { ElMessage } from 'element-plus'
 import {
     ArrowLeft,
@@ -187,24 +194,30 @@ const currentImage = ref('')
 const product = ref(null)
 
 // --- SKU 核心逻辑 ---
-const selectedSpecs = reactive({}) // { "形状": "L形" }
-const pathDict = ref({}) // 路径字典，用于计算禁用状态
+const selectedSpecs = reactive({})
+const pathDict = ref({})
 
 // 计算属性
 const productId = computed(() => route.params.id)
 
-// 是否选完了所有规格
 const isAllSpecsSelected = computed(() => {
     if (!product.value?.specs) return true
     return product.value.specs.every(s => selectedSpecs[s.name])
 })
 
-// 查找匹配的 SKU 对象
 const currentSku = computed(() => {
     if (!isAllSpecsSelected.value || !product.value?.skus) return null
     return product.value.skus.find(sku => {
         return sku.specs.every(s => selectedSpecs[s.key] === s.value)
     })
+})
+
+// --- 新增：监听 SKU 变化以切换图片 ---
+watch(currentSku, (newSku) => {
+    // 如果切换到的新 SKU 带有图片，则更新大图展示
+    if (newSku && newSku.image) {
+        currentImage.value = newSku.image
+    }
 })
 
 // 动态显示价格
@@ -217,15 +230,19 @@ const displayStock = computed(() => {
     return currentSku.value ? currentSku.value.stock : (product.value?.stock || 0)
 })
 
-// --- SKU 算法方法 ---
+// --- 修复：监听库存变化，自动调整数量 ---
+watch(displayStock, (newStock) => {
+    if (selectedQuantity.value > newStock) {
+        selectedQuantity.value = newStock > 0 ? newStock : 1
+    }
+})
 
-// 构建路径字典 (Power Set)
+// --- SKU 算法方法 ---
 const buildPathDict = (skus) => {
     const dict = {}
     skus.forEach(sku => {
         if (sku.stock <= 0) return
         const tokens = sku.specs.map(s => `${s.key}:${s.value}`)
-        // 获取子集
         const subsets = [[]]
         for (const token of tokens) {
             const size = subsets.length
@@ -242,10 +259,8 @@ const buildPathDict = (skus) => {
     return dict
 }
 
-// 检查某个按钮是否应禁用
 const isOptionDisabled = (specName, specValue) => {
     if (!product.value) return false
-    // 模拟选中当前项后的路径组合
     const nextSelect = { ...selectedSpecs, [specName]: specValue }
     const tokens = Object.keys(nextSelect)
         .filter(k => nextSelect[k])
@@ -264,7 +279,6 @@ const handleSpecSelect = (specName, specValue) => {
 }
 
 // --- 基础业务逻辑 ---
-
 const getCategoryName = (categoryId) => {
     const category = productStore.getCategoryById(categoryId)
     return category?.name || '未知分类'
@@ -275,27 +289,32 @@ const goBack = () => {
     router.push(backRoute)
 }
 
-const addToCart = () => {
+const addToCart = async () => {
     if (!product.value || displayStock.value === 0) {
         ElMessage.warning('商品暂无库存')
         return
     }
-
     if (!isAllSpecsSelected.value) {
         ElMessage.warning('请选择完整的商品规格')
         return
     }
-
-    // 构建加入购物车的数据
-    const cartItem = {
-        ...product.value,
-        price: displayPrice.value,
-        skuId: currentSku.value?.id,
-        skuName: currentSku.value?.specs.map(s => s.value).join(' ')
+    try {
+        await addToCartApi({
+            skuId: currentSku.value?.id,
+            quantity: selectedQuantity.value
+        })
+        const cartItem = {
+            ...product.value,
+            price: displayPrice.value,
+            skuId: currentSku.value?.id,
+            skuName: currentSku.value?.specs.map(s => s.value).join(' ')
+        }
+        cartStore.addItem(cartItem, selectedQuantity.value)
+        ElMessage.success(`已添加商品到购物车`)
+    } catch (error) {
+        ElMessage.error('添加购物车失败')
+        console.error(error)
     }
-
-    cartStore.addItem(cartItem, selectedQuantity.value)
-    ElMessage.success(`已添加商品到购物车`)
 }
 
 const toggleFavorite = () => {
@@ -304,47 +323,50 @@ const toggleFavorite = () => {
     ElMessage.success(product.value.isFavorite ? '已添加到收藏' : '已取消收藏')
 }
 
+const buyNow = () => {
+    if (!product.value || displayStock.value === 0) {
+        ElMessage.warning('商品暂无库存')
+        return
+    }
+    if (!isAllSpecsSelected.value) {
+        ElMessage.warning('请选择完整的商品规格')
+        return
+    }
+    ElMessage.success('演示功能：立即购买功能开发中')
+}
+
 const initializeProduct = async () => {
     loading.value = true
     try {
         const productData = await productApi.getProductDetail(productId.value)
         const allImages = [productData.mainImg, ...productData.images]
 
-        // 初始化规格选中状态
         if (productData.specs) {
             productData.specs.forEach(s => selectedSpecs[s.name] = null)
-            // 生成路径图
             pathDict.value = buildPathDict(productData.skus)
         }
 
         product.value = {
             ...productData,
-            id: productData.id,
-            name: productData.name,
-            description: productData.description,
-            image: productData.mainImg,
             images: allImages,
             category: productData.categoryId,
-            price: productData.price,
-            originalPrice: productData.originalPrice,
-            stock: productData.stock,
             rating: productData.score,
             reviewCount: 0,
-            tags: productData.tags,
-            isFavorite: false,
-            specs: productData.specs,
-            skus: productData.skus
+            isFavorite: false
         }
 
-        // 默认选中逻辑：选中第一个 SKU 的规格
+        // --- 修正：默认选中逻辑与图片同步 ---
         if (productData.skus && productData.skus.length > 0) {
             const defaultSku = productData.skus[0]
             defaultSku.specs.forEach(s => {
                 selectedSpecs[s.key] = s.value
             })
+            // 初始化图片：优先使用默认 SKU 的图片，没有则用主图
+            currentImage.value = defaultSku.image || productData.mainImg
+        } else {
+            currentImage.value = productData.mainImg
         }
 
-        currentImage.value = product.value.image
         selectedQuantity.value = 1
     } catch (error) {
         console.error('初始化失败:', error)
@@ -455,6 +477,7 @@ onMounted(initializeProduct)
         padding: $spacing-lg;
         border-radius: 12px;
         margin-bottom: $spacing-lg;
+        height: 160px;
 
         .current-price {
             font-size: 32px;
@@ -548,6 +571,13 @@ onMounted(initializeProduct)
         margin-bottom: $spacing-xl;
 
         .add-to-cart-btn {
+            flex: 1;
+            height: 48px;
+            border-radius: 24px;
+            font-weight: 600;
+        }
+
+        .buy-now-btn {
             flex: 1;
             height: 48px;
             border-radius: 24px;

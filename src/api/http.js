@@ -7,8 +7,8 @@ import axios from 'axios'
 
 // 创建axios实例
 const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:18500/api',
-  timeout: 10000,
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:18500',
+  timeout: 100000,
   headers: {
     'Content-Type': 'application/json'
   }
