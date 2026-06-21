@@ -186,7 +186,17 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
 import { User, Lock, Message, Phone, Key, Plus } from '@element-plus/icons-vue'
+import { postAction } from '@/api/http'
 
+// ============================================
+// 当前页面的 API 配置
+// ============================================
+const urls = {
+  register: '/v1/auth/register',
+  captcha: '/v1/auth/captcha'
+}
+
+// 路由和状态
 const router = useRouter()
 const authStore = useAuthStore()
 
@@ -303,17 +313,17 @@ const handleSendCaptcha = async () => {
 
   try {
     sendingCaptcha.value = true
-    
-    // 调用发送验证码API
-    await authStore.sendEmailCaptcha(registerForm.email)
-    
+
+    // 直接在页面内调用请求
+    await postAction(urls.captcha, { email: registerForm.email })
+
     ElMessage.success('验证码已发送到您的邮箱')
-    
+
     // 开始60秒倒计时
     startCountdown()
   } catch (error) {
     console.error('Send captcha error:', error)
-    const errorMessage = error.response?.data?.message || error.message || '发送验证码失败，请稍后重试'
+    const errorMessage = error.message || '发送验证码失败，请稍后重试'
     ElMessage.error(errorMessage)
   } finally {
     sendingCaptcha.value = false
@@ -382,8 +392,11 @@ const handleRegister = async () => {
       registerData.avatar = registerForm.avatar
     }
 
-    // 调用注册API
-    await authStore.register(registerData)
+    // 直接在页面内调用请求
+    const response = await postAction(urls.register, registerData)
+
+    // 更新 store 中的系统状态
+    authStore.setAuth(response)
 
     // 注册成功提示
     ElMessage.success('注册成功！即将跳转到首页...')
@@ -394,9 +407,9 @@ const handleRegister = async () => {
     }, 2500)
   } catch (error) {
     console.error('Register error:', error)
-    
+
     // 显示错误信息
-    const errorMessage = error.response?.data?.message || error.message || '注册失败，请检查输入信息'
+    const errorMessage = error.message || '注册失败，请检查输入信息'
     ElMessage.error(errorMessage)
   } finally {
     loading.value = false

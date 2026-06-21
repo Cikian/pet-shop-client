@@ -41,26 +41,33 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useCartStore } from '@/stores/cart'
-import { useProductStore } from '@/stores/product'
+import { getAction } from '@/api/http'
 
-// 引入你刚刚保存的新组件
+// 组件
 import Slideshow from '@/components/common/Slideshow.vue'
-
 import CategoryGrid from '@/components/common/CategoryGrid.vue'
 import ProductCarousel from '@/components/common/ProductCarousel.vue'
 import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue'
 import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
 import NetworkStatus from '@/components/common/NetworkStatus.vue'
 
-import { getSlideListApi, getHomeCategoriesApi, getHomeRecommendApi, getHomeDiscountApi } from '@/api/home'
+// ============================================
+// 当前页面的 API 配置（接口管理集中在此处）
+// ============================================
+const urls = {
+    banners: '/home/slide',
+    categories: '/home/cate',
+    recommend: '/home/recommend',
+    discount: '/home/discount'
+}
 
+// 路由和状态
 const router = useRouter()
 const cartStore = useCartStore()
-const productStore = useProductStore()
 
 // 响应式数据
 const banners = ref([])
@@ -72,13 +79,17 @@ const categoriesLoading = ref(true)
 const productsLoading = ref(true)
 const autoplayInterval = ref(5000)
 
+// ============================================
+// 请求方法（直接在页面内定义）
+// ============================================
+
 /**
  * 加载轮播图数据
  */
 const loadBanners = async () => {
     try {
         bannersLoading.value = true
-        const slideList = await getSlideListApi()
+        const slideList = await getAction(urls.banners)
 
         const filteredSlides = slideList.filter(slide =>
             slide.status !== false && slide.delFlag !== true
@@ -158,8 +169,7 @@ const handleRetry = async () => {
 const loadCategories = async () => {
     try {
         categoriesLoading.value = true
-        const response = await getHomeCategoriesApi()
-        console.log('API Response:', response)
+        const response = await getAction(urls.categories)
         categories.value = response.map(category => ({
             id: category.id,
             name: category.name,
@@ -181,8 +191,8 @@ const loadProducts = async () => {
     try {
         productsLoading.value = true
         const [recommendResponse, discountResponse] = await Promise.all([
-            getHomeRecommendApi(),
-            getHomeDiscountApi()
+            getAction(urls.recommend),
+            getAction(urls.discount)
         ])
         featuredProducts.value = (recommendResponse || []).map(product => ({
             ...product,

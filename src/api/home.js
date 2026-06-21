@@ -1,38 +1,12 @@
+/**
+ * [已废弃] 首页 API 模块
+ * ⚠️ 新代码不要再使用此模块。首页轮播图/分类/精选推荐等请求
+ * 请直接在 views/Home.vue 组件内通过 api/http.js 的 getAction 发起，
+ * URL 定义放在组件顶部的 urls 对象里。
+ */
 import { getAction } from './http'
 
-/**
- * 首页API模块
- * 提供首页相关数据接口，如轮播图等
- */
-
-/**
- * 获取轮播图列表API
- * @returns {Promise<SlideItem[]>} 轮播图数据列表
- */
-export const getSlideListApi = () => {
-  return getAction('/home/slide')
-}
-
-/**
- * 获取首页推荐分类API
- * @returns {Promise<CategoryItem[]>} 推荐分类数据列表
- */
-export const getHomeCategoriesApi = () => {
-  return getAction('/home/cate')
-}
-
-/**
- * 获取首页精选推荐商品API
- * @returns {Promise<ProductItem[]>} 精选推荐商品列表
- */
-export const getHomeRecommendApi = () => {
-  return getAction('/home/recommend')
-}
-
-/**
- * 获取首页限时优惠商品API
- * @returns {Promise<ProductItem[]>} 限时优惠商品列表
- */
-export const getHomeDiscountApi = () => {
-  return getAction('/home/discount')
-}
+export const getSlideListApi = () => getAction('/home/slide')
+export const getHomeCategoriesApi = () => getAction('/home/cate')
+export const getHomeRecommendApi = () => getAction('/home/recommend')
+export const getHomeDiscountApi = () => getAction('/home/discount')

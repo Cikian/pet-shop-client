@@ -219,15 +219,24 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { 
-  ElIcon, ElButton, ElCheckbox, ElImage, ElInputNumber, ElTag, ElMessage, ElMessageBox 
+import {
+  ElIcon, ElButton, ElCheckbox, ElImage, ElInputNumber, ElTag, ElMessage, ElMessageBox
 } from 'element-plus'
-import { 
-  ShoppingCart, ShoppingCartFull, ShoppingBag, Picture, Delete, ArrowLeft, ArrowRight, InfoFilled 
+import {
+  ShoppingCart, ShoppingCartFull, ShoppingBag, Picture, Delete, ArrowLeft, ArrowRight, InfoFilled
 } from '@element-plus/icons-vue'
-import { getCartListApi } from '@/api/cart'
+import { getAction, postAction } from '@/api/http'
 import { useCartStore } from '@/stores/cart'
 
+// ============================================
+// 当前页面的 API 配置
+// ============================================
+const urls = {
+  list: '/cart/list',
+  add: '/cart'
+}
+
+// 路由和状态
 const router = useRouter()
 const cartStore = useCartStore()
 
@@ -263,14 +272,18 @@ const totalPrice = computed(() => {
     .reduce((sum, item) => sum + item.price * item.quantity, 0)
 })
 
+// ============================================
+// 请求方法（直接在页面内定义）
+// ============================================
+
 const fetchCartList = async () => {
   loading.value = true
   try {
-    const result = await getCartListApi({
+    const result = await getAction(urls.list, {
       pageNo: pagination.value.pageNo,
       pageSize: pagination.value.pageSize
     })
-    
+
     if (result && result.records) {
       cartList.value = result.records.map(item => ({
         ...item,
@@ -282,7 +295,7 @@ const fetchCartList = async () => {
         total: result.total || 0,
         pages: result.pages || 1
       }
-      
+
       const totalQty = cartList.value.reduce((sum, item) => sum + item.quantity, 0)
       cartStore.updateTotalCount(totalQty)
     }

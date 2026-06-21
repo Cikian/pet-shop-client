@@ -168,8 +168,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useProductStore } from '@/stores/product.js'
 import { useCartStore } from '@/stores/cart.js'
 import { useNavigationStore } from '@/stores/navigation.js'
-import { productApi } from '@/api/product.js'
-import { addToCartApi } from '@/api/cart.js'
+import { getAction, postAction } from '@/api/http'
 import { ElMessage } from 'element-plus'
 import {
     ArrowLeft,
@@ -179,6 +178,14 @@ import {
     Box
 } from '@element-plus/icons-vue'
 import LazyImage from '@/components/common/LazyImage.vue'
+
+// ============================================
+// 当前页面的 API 配置
+// ============================================
+const urls = {
+    detail: '/goods/detail',
+    addToCart: '/cart'
+}
 
 // 路由和状态管理
 const route = useRoute()
@@ -299,7 +306,7 @@ const addToCart = async () => {
         return
     }
     try {
-        await addToCartApi({
+        await postAction(urls.addToCart, {
             skuId: currentSku.value?.id,
             quantity: selectedQuantity.value
         })
@@ -338,7 +345,7 @@ const buyNow = () => {
 const initializeProduct = async () => {
     loading.value = true
     try {
-        const productData = await productApi.getProductDetail(productId.value)
+        const productData = await getAction(`${urls.detail}/${productId.value}`)
         const allImages = [productData.mainImg, ...productData.images]
 
         if (productData.specs) {

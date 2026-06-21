@@ -101,12 +101,21 @@ import { useCartStore } from '@/stores/cart.js'
 import ProductGrid from '@/components/product/ProductGrid.vue'
 import BreadcrumbNav from '@/components/common/BreadcrumbNav.vue'
 import { ElMessage } from 'element-plus'
+import { getAction } from '@/api/http'
 
 /**
  * 商品分类页面
  * 支持分类筛选、商品展示、分页/无限滚动等功能
  * 需求: 2.1, 2.4
  */
+
+// ============================================
+// 当前页面的 API 配置（接口管理集中在此处）
+// ============================================
+const urls = {
+  list: '/goods/list',
+  categories: '/goods/categories'
+}
 
 // 路由和状态管理
 const route = useRoute()
@@ -142,6 +151,40 @@ const {
   sortBy,
   searchKeyword
 } = productStore
+
+// ============================================
+// 请求方法（直接在页面内定义，方便未来接入真实 API）
+// ============================================
+const fetchCategoryProducts = async (categoryId, params = {}) => {
+  loading.value = true
+  try {
+    const result = await getAction(urls.list, {
+      categoryId,
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      sortBy: sortBy.value,
+      ...params
+    })
+    return result
+  } catch (error) {
+    console.error('获取分类商品失败:', error)
+    ElMessage.error(error.message || '获取商品列表失败，请重试')
+    throw error
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchCategories = async () => {
+  try {
+    const result = await getAction(urls.categories)
+    return result
+  } catch (error) {
+    console.error('获取分类失败:', error)
+    ElMessage.error(error.message || '获取分类失败，请重试')
+    throw error
+  }
+}
 
 // 计算属性
 const currentCategory = computed(() => {

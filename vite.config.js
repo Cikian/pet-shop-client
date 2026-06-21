@@ -34,12 +34,15 @@ export default defineConfig({
         chunkFileNames: 'js/[name]-[hash].js',
         entryFileNames: 'js/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
-          const info = assetInfo.name.split('.')
+          // 兼容处理：防范在新版 Rollup 中 assetInfo.name 偶发性缺失导致的 split 报错
+          const fileName = assetInfo.name || ''
+          const info = fileName.split('.')
           const ext = info[info.length - 1]
-          if (/\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/i.test(assetInfo.name)) {
+
+          if (/\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/i.test(fileName)) {
             return `media/[name]-[hash].${ext}`
           }
-          if (/\.(png|jpe?g|gif|svg)(\?.*)?$/i.test(assetInfo.name)) {
+          if (/\.(png|jpe?g|gif|svg)(\?.*)?$/i.test(fileName)) {
             return `images/[name]-[hash].${ext}`
           }
           if (ext === 'css') {
@@ -64,8 +67,9 @@ export default defineConfig({
     // 设置chunk大小警告限制
     chunkSizeWarningLimit: 1000
   },
-  // 开发服务器优化
+  // 开发服务器优化与代理配置
   server: {
+    host: '0.0.0.0', // 允许局域网内的其他设备访问你的前端网页
     // 预热常用文件
     warmup: {
       clientFiles: [
@@ -73,6 +77,16 @@ export default defineConfig({
         './src/components/layout/AppLayout.vue',
         './src/components/layout/AppHeader.vue'
       ]
+    },
+    // 跨域代理配置
+    proxy: {
+      // 当请求路径以 /api 开头时，命中此代理规则
+      '/api': {
+        target: 'http://192.168.18.39:18500', // 目标后端接口服务
+        changeOrigin: true,                  // 改变请求源（Origin），使后端服务器误以为是同源请求，从而绕过 403 限制
+        // 如果你的真实后端接口中确实包含 /api（例如 http://192.168.18.39:18500/api/home/slide）
+        // 则不需要配置 rewrite。保持当前状态即可。
+      }
     }
   },
   // 依赖预构建优化

@@ -109,7 +109,16 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
+import { postAction } from '@/api/http'
 
+// ============================================
+// 当前页面的 API 配置
+// ============================================
+const urls = {
+  login: '/v1/auth/login'
+}
+
+// 路由和状态
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
@@ -151,8 +160,14 @@ const handleLogin = async () => {
 
     loading.value = true
 
-    // 调用登录API
-    await authStore.login(loginForm.username, loginForm.password)
+    // 直接在页面内调用请求
+    const response = await postAction(urls.login, {
+      username: loginForm.username,
+      password: loginForm.password
+    })
+
+    // 更新 store 中的系统状态（token、用户信息等）
+    authStore.setAuth(response)
 
     // 登录成功提示
     ElMessage.success('登录成功！')
@@ -162,9 +177,9 @@ const handleLogin = async () => {
     router.push(redirect)
   } catch (error) {
     console.error('Login error:', error)
-    
+
     // 显示错误信息
-    const errorMessage = error.response?.data?.message || error.message || '登录失败，请检查用户名和密码'
+    const errorMessage = error.message || '登录失败，请检查用户名和密码'
     ElMessage.error(errorMessage)
   } finally {
     loading.value = false
